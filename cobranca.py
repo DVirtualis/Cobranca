@@ -401,24 +401,24 @@ def page_cobranca():
                     height=400
                 )
                 
-                # Gráfico aprimorado
-                fig = px.line(
-                    df, 
-                    x="Mês", 
-                    y="Parcela", 
-                    title="📈 Evolução das Parcelas",
-                    markers=True,
-                    line_shape="linear",
-                    color_discrete_sequence=["#2ecc71"]
-                )
-                fig.update_layout(
-                    xaxis_title="Mês",
-                    yaxis_title="Valor da Parcela",
-                    plot_bgcolor='rgba(240, 240, 240, 0.9)',
-                    xaxis=dict(tickmode='linear', dtick=1),
-                    hoverlabel=dict(bgcolor="white")
-                )
-                st.plotly_chart(fig, use_container_width=True)
+            # Gráfico aprimorado
+            fig = px.line(
+                df, 
+                x="Mês", 
+                y="Parcela", 
+                title="📈 Evolução das Parcelas",
+                markers=True,
+                line_shape="linear",
+                color_discrete_sequence=["#2ecc71"]
+            )
+            fig.update_layout(
+                xaxis_title="Mês",
+                yaxis_title="Valor da Parcela",
+                plot_bgcolor='rgba(240, 240, 240, 0.9)',
+                xaxis=dict(tickmode='linear', dtick=1),
+                hoverlabel=dict(bgcolor="white")
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
             st.error(f"## ❌ Erro no cálculo: {str(e)}")
