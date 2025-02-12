@@ -289,7 +289,6 @@ def page_cobranca():
             valor_base = valor - desconto 
 
             if modo_calculo == "🏦 Financiamento":
-                # Cálculos de financiamento
                 if metodo == "Price":
                     parcela = calcular_price(valor_base, taxa, meses)
                     saldo = valor_base
@@ -339,7 +338,6 @@ def page_cobranca():
                 
                 elif metodo == "MEJS":
                     parcela = calcular_mejs(valor_base, taxa, meses)
-                    
                     saldo = valor_base
                     amort = valor_base / meses
                     for i in range(1, meses+1):
@@ -354,12 +352,68 @@ def page_cobranca():
                         })
                 
                 st.success(f"**Valor da Parcela ({metodo}):** {formatar_moeda(parcela)}")
-                # Adicionar cálculo do Total Pago para financiamento
+                
+                # Adicionar total pago
                 total_pago = 0
                 for item in tabela:
                     total_pago += item["Parcela"]
                     item["Total Pago"] = total_pago
                 
+                # Detalhes do cálculo
+                with st.expander("🧮 Detalhes do Cálculo", expanded=False):
+                    if metodo == "Price":
+                        st.markdown(f"""
+                        **Fórmula Price:**  
+                        `P = (PV * i) / (1 - (1 + i)^-n)`  
+                        
+                        **Valores Aplicados:**  
+                        - PV (Valor Presente) = {formatar_moeda(valor_base)}  
+                        - i (Taxa Mensal) = {taxa:.4%}  
+                        - n (Períodos) = {meses}  
+                        
+                        **Cálculo:**  
+                        ```python
+                        P = ({formatar_moeda(valor_base)} * {taxa:.4%}) 
+                        / (1 - (1 + {taxa:.4%})^-{meses})
+                        = {formatar_moeda(parcela)}
+                        ```
+                        """)
+                    
+                    elif metodo == "SAC":
+                        st.markdown(f"""
+                        **Fórmula SAC:**  
+                        `Amortização = PV / n`  
+                        `Juros = Saldo Devedor * i`  
+                        `Parcela = Amortização + Juros`  
+                        
+                        **Parâmetros:**  
+                        - Amortização Constante = {formatar_moeda(valor_base/meses)}  
+                        - Taxa Mensal = {taxa:.4%}  
+                        """)
+                    
+                    elif metodo == "SACRE":
+                        st.markdown(f"""
+                        **Fórmula SACRE:**  
+                        `Fator de Correção = 1 + i`  
+                        `Amortização = (PV/n) * (1 + i)^período`  
+                        
+                        **Componentes:**  
+                        - Fator Mensal = {1 + taxa:.5f}  
+                        - Amortização Base = {formatar_moeda(valor_base/meses)}  
+                        """)
+                    
+                    elif metodo == "MEJS":
+                        total_juros = valor_base * taxa * meses
+                        st.markdown(f"""
+                        **Fórmula MEJS:**  
+                        `Total Juros = PV * i * n`  
+                        `Parcela = (PV + Total Juros) / n`  
+                        
+                        **Cálculo Direto:**  
+                        - Juros Totais = {formatar_moeda(total_juros)}  
+                        - Parcela = ({formatar_moeda(valor_base)} + {formatar_moeda(total_juros)}) / {meses}  
+                        """)
+
             else:  # Parcelamento Simples
                 if isinstance(num_parcelas, int):
                     total_juros = valor * taxa * meses
@@ -377,35 +431,52 @@ def page_cobranca():
                     })
                 
                 st.success(f"## 💰 Valor da Parcela: {formatar_moeda(valor_parcela)}")
+                
+                # Detalhes do cálculo
+                with st.expander("🧮 Detalhes do Cálculo", expanded=False):
+                    if isinstance(num_parcelas, int):
+                        st.markdown(f"""
+                        **Fórmula Parcelado:**  
+                        `Total Juros = Valor * Taxa * Parcelas`  
+                        `Valor Parcela = (Valor + Total Juros) / Parcelas`  
+                        
+                        **Aplicação:**  
+                        1. Total Juros = {formatar_moeda(valor)} * {taxa:.4%} * {meses} = {formatar_moeda(total_juros)}  
+                        2. Valor Parcela = ({formatar_moeda(valor)} + {formatar_moeda(total_juros)}) / {meses}  
+                        """)
+                    else:
+                        st.markdown(f"""
+                        **Fórmula à Vista:**  
+                        `Valor Total = Valor * (1 + Taxa)`  
+                        
+                        **Cálculo:**  
+                        {formatar_moeda(valor)} * (1 + {taxa:.4%}) = {formatar_moeda(valor_parcela)}  
+                        """)
 
             # Exibição dos resultados
             if tabela:
                 df = pd.DataFrame(tabela)
                 df['Mês'] = df['Mês'].astype(int)
 
-                # Garantir que Total Pago existe para todos os casos
                 if 'Total Pago' not in df.columns:
                     df['Total Pago'] = df['Parcela'].cumsum()
 
-                # Configurar colunas conforme o modo
+                # Configurar colunas
+                cols = ["Mês", "Parcela", "Juros", "Total Pago"]
                 if modo_calculo == "🏦 Financiamento":
-                    cols = ["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor", "Total Pago"]
-                    style_cols = cols[1:]
-                else:
-                    cols = ["Mês", "Parcela", "Juros", "Total Pago"]
-                    style_cols = cols[1:]
+                    cols.insert(3, "Amortização")
+                    cols.insert(4, "Saldo Devedor")
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
                     df[cols].style.format({
-                        col: lambda x: formatar_moeda(x) for col in style_cols
+                        col: lambda x: formatar_moeda(x) for col in cols[1:]
                     }).applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
                     height=400
                 )
-
 
                 # Gráfico
                 fig = px.line(
@@ -414,40 +485,14 @@ def page_cobranca():
                     y="Parcela",
                     title="📈 Evolução das Parcelas",
                     markers=True,
-                    line_shape="linear",
                     color_discrete_sequence=["#2ecc71"]
                 )
                 fig.update_layout(
                     xaxis_title="Mês",
                     yaxis_title="Valor da Parcela",
-                    hoverlabel=dict(bgcolor="white"),
                     xaxis=dict(tickmode='linear', dtick=1)
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
             st.error(f"## ❌ Erro no cálculo: {str(e)}")
-
-    # Seção de ajuda
-    with st.expander("ℹ️ Explicação dos Métodos", expanded=False):
-        st.markdown("""
-        <div style="padding:20px; border-radius:10px; margin:10px 0; background-color:#f8f9fa; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-            <h4>🏦 Financiamento</h4>
-            <ul>
-                <li><b>Price:</b> Parcelas fixas com juros compostos</li>
-                <li><b>SAC:</b> Amortização constante com parcelas decrescentes</li>
-                <li><b>SACRE:</b> Sistema misto com amortização crescente</li>
-                <li><b>MEJS:</b> Juros simples com amortização antecipada</li>
-            </ul>
-        </div>
-        <div style="padding:20px; border-radius:10px; margin:10px 0; background-color:#f8f9fa; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-            <h4>💳 Parcelamento Simples</h4>
-            <ul>
-                <li>Cálculo direto das taxas do cartão</li>
-                <li>Juros aplicados sobre o valor total</li>
-                <li>Opções à vista ou parcelado</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        
