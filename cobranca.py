@@ -238,6 +238,7 @@ def page_cobranca():
         taxa = TAXAS[tipo_parcelamento][num_parcelas]
     else:
         taxa = TAXAS[tipo_parcelamento][num_parcelas]
+   
     
     # Cálculo e exibição
     if st.button("Calcular"):
@@ -267,3 +268,118 @@ def page_cobranca():
         except Exception as e:
             st.error(f"Erro no cálculo: {str(e)}")
 
+        mostrar_todas = st.checkbox("Mostrar tabela completa de amortização")
+
+        # Cálculos
+        if st.button("Calcular"):
+            try:
+                if metodo == "Price":
+                    parcela = calcular_price(valor, taxa, meses)
+                    st.success(f"Valor da Parcela (Price): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                    
+                    if mostrar_todas:
+                        saldo = valor
+                        tabela = []
+                        for i in range(1, meses+1):
+                            juros = saldo * taxa
+                            amort = parcela - juros
+                            saldo -= amort
+                            tabela.append({
+                                "Mês": i,
+                                "Parcela": parcela,
+                                "Juros": juros,
+                                "Amortização": amort,
+                                "Saldo Devedor": max(saldo, 0)
+                            })
+                        df = pd.DataFrame(tabela)
+                        st.dataframe(df.style.format({
+                            "Parcela": "{:,.2f}",
+                            "Juros": "{:,.2f}", 
+                            "Amortização": "{:,.2f}",
+                            "Saldo Devedor": "{:,.2f}"
+                        }))
+
+                elif metodo == "SAC":
+                    parcelas = calcular_sac(valor, taxa, meses)
+                    st.success(f"Primeira Parcela (SAC): R$ {parcelas[0]:,.2f}")
+                    
+                    if mostrar_todas:
+                        saldo = valor
+                        tabela = []
+                        for i, parcela in enumerate(parcelas, 1):
+                            juros = saldo * taxa
+                            amort = valor / meses
+                            saldo -= amort
+                            tabela.append({
+                                "Mês": i,
+                                "Parcela": parcela,
+                                "Juros": juros,
+                                "Amortização": amort,
+                                "Saldo Devedor": max(saldo, 0)
+                            })
+                        df = pd.DataFrame(tabela)
+                        st.dataframe(df.style.format({
+                            "Parcela": "{:,.2f}",
+                            "Juros": "{:,.2f}",
+                            "Amortização": "{:,.2f}",
+                            "Saldo Devedor": "{:,.2f}"
+                        }))
+
+                elif metodo == "SACRE":
+                    parcelas = calcular_sacre(valor, taxa, meses)
+                    st.success(f"Primeira Parcela (SACRE): R$ {parcelas[0]:,.2f}")
+                    
+                    if mostrar_todas:
+                        saldo = valor
+                        amortizacao_base = valor / meses
+                        fator = 1 + taxa
+                        tabela = []
+                        for i, parcela in enumerate(parcelas, 1):
+                            juros = saldo * taxa
+                            amort = amortizacao_base * (fator**i)
+                            saldo -= amort
+                            tabela.append({
+                                "Mês": i,
+                                "Parcela": parcela,
+                                "Juros": juros,
+                                "Amortização": amort,
+                                "Saldo Devedor": max(saldo, 0)
+                            })
+                        df = pd.DataFrame(tabela)
+                        st.dataframe(df.style.format({
+                            "Parcela": "{:,.2f}",
+                            "Juros": "{:,.2f}",
+                            "Amortização": "{:,.2f}",
+                            "Saldo Devedor": "{:,.2f}"
+                        }))
+
+                elif metodo == "MEJS":
+                    parcela = calcular_mejs(valor, taxa, meses)
+                    st.success(f"Valor da Parcela (MEJS): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                    
+                    if mostrar_todas:
+                        saldo = valor
+                        amort = valor / meses
+                        tabela = []
+                        for i in range(1, meses+1):
+                            juros = valor * taxa  # Juros fixos sobre o valor original
+                            saldo -= amort
+                            tabela.append({
+                                "Mês": i,
+                                "Parcela": parcela,
+                                "Juros": juros,
+                                "Amortização": amort,
+                                "Saldo Devedor": max(saldo, 0)
+                            })
+                        df = pd.DataFrame(tabela)
+                        st.dataframe(df.style.format({
+                            "Parcela": "{:,.2f}",
+                            "Juros": "{:,.2f}", 
+                            "Amortização": "{:,.2f}",
+                            "Saldo Devedor": "{:,.2f}"
+                        }))
+
+            except ZeroDivisionError:
+                st.error("O número de meses deve ser maior que zero")
+            except Exception as e:
+                st.error(f"Erro no cálculo: {str(e)}")
