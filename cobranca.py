@@ -350,8 +350,7 @@ def page_cobranca():
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
-                
-                st.success(f"**Valor da Parcela ({metodo}):** {formatar_moeda(parcela)}")
+
                 
                 # Adicionar total pago
                 total_pago = 0
