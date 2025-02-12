@@ -242,62 +242,60 @@ def page_cobranca():
                 options=list(TAXAS[tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 help="Selecione o número de parcelas ou forma de pagamento"
-            )
-   # Seção condicional para financiamento
-    # Seção condicional para financiamento
+             )
+    valor = 0.0
+    desconto = 0.0
+    meses = 1
+    
     if modo_calculo == "🏦 Financiamento":
         with st.expander("📊 Parâmetros do Financiamento", expanded=True):
             col1, col2 = st.columns([3, 2])
             with col1:
                 valor = st.number_input("**Valor Bruto (R$)**", 
-                                      min_value=0.01, 
-                                      value=10000.0, 
-                                      step=100.0,
-                                       key="valor_bruto_input",
-                                      help="Valor total antes dos descontos")
+                                    min_value=0.01, 
+                                    value=10000.0, 
+                                    step=100.0,
+                                    key="valor_bruto")
                 desconto = st.number_input("**Desconto (R$)**", 
-                                         min_value=0.0, 
-                                         max_value=valor, 
-                                         value=0.0, 
-                                         step=100.0,
-                                         help="Desconto a ser aplicado")
+                                        min_value=0.0, 
+                                        max_value=valor if valor > 0 else 0.0, 
+                                        value=0.0, 
+                                        step=100.0,
+                                        key="desconto")
             with col2:
-                st.metric("**Percentual de Desconto**", 
-                         f"{(desconto/valor*100 if valor > 0 else 0):.2f}%",
-                         help="Percentual equivalente ao desconto aplicado")
-                st.metric("**Valor Líquido**", 
-                         formatar_moeda(valor - desconto),
-                         delta_color="off",
-                         help="Valor efetivo para cálculo")
+                percentual = (desconto / valor * 100) if valor > 0 else 0.0
+                st.metric("**Percentual de Desconto**", f"{percentual:.2f}%")
+                st.metric("**Valor Líquido**", formatar_moeda(valor - desconto))
             
             metodo = st.selectbox("**Método de Amortização**",
                                 ["Price", "SAC", "SACRE", "MEJS"],
-                                help="Selecione o método de cálculo")
+                                key="metodo_amortizacao")
             meses = num_parcelas if isinstance(num_parcelas, int) else 1
+    else:
+        with st.expander("💸 Parâmetros do Parcelamento", expanded=True):
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                valor = st.number_input("**Valor Total (R$)**", 
+                                    min_value=0.01, 
+                                    value=10000.0, 
+                                    step=100.0,
+                                    key="valor_total")
+            with col2:
+                meses = num_parcelas if isinstance(num_parcelas, int) else 1
+                st.metric("**Parcelas**", meses if isinstance(num_parcelas, int) else "À Vista")
 
-# Divisor visual
     st.markdown("---")
-    
-      # Seção de controle
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        mostrar_todas = st.checkbox("📋 Mostrar tabela completa", value=True)
-    with col2:
-        calcular_btn = st.button("🔄 Calcular", type="primary")
-    
-    
+    calcular_btn = st.button("🔄 Calcular", type="primary")
+
     if calcular_btn:
         try:
             tabela = []
-            valor_base = valor - desconto if modo_calculo == "🏦 Financiamento" else valor
             taxa = TAXAS[tipo_parcelamento][num_parcelas]
+            valor_base = valor - desconto if modo_calculo == "🏦 Financiamento" else valor
 
             if modo_calculo == "🏦 Financiamento":
                 if metodo == "Price":
                     parcela = calcular_price(valor_base, taxa, meses)
-                    parcelas = [parcela] * meses
-                    st.success(f"Valor da Parcela (Price): {formatar_moeda(parcela)}")
-                    
                     saldo = valor_base
                     for i in range(1, meses+1):
                         juros = saldo * taxa
@@ -310,11 +308,9 @@ def page_cobranca():
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
-
+                
                 elif metodo == "SAC":
                     parcelas = calcular_sac(valor_base, taxa, meses)
-                    st.success(f"Primeira Parcela (SAC): R$ {parcelas[0]:,.2f}")
-                    
                     saldo = valor_base
                     amort = valor_base / meses
                     for i, parcela in enumerate(parcelas, 1):
@@ -327,11 +323,9 @@ def page_cobranca():
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
-
+                
                 elif metodo == "SACRE":
                     parcelas = calcular_sacre(valor_base, taxa, meses)
-                    st.success(f"Primeira Parcela (SACRE): R$ {parcelas[0]:,.2f}")
-                    
                     saldo = valor_base
                     amort_base = valor_base / meses
                     fator = 1 + taxa
@@ -346,11 +340,9 @@ def page_cobranca():
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
-
+                
                 elif metodo == "MEJS":
                     parcela = calcular_mejs(valor_base, taxa, meses)
-                    st.success(f"Valor da Parcela (MEJS): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-                    
                     saldo = valor_base
                     amort = valor_base / meses
                     for i in range(1, meses+1):
@@ -363,16 +355,17 @@ def page_cobranca():
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
+                
+                st.success(f"**Valor da Parcela ({metodo}):** {formatar_moeda(parcela)}")
+
             else:  # Parcelamento Simples
                 if isinstance(num_parcelas, int):
-                    total_juros = valor * (taxa * meses)
+                    total_juros = valor * taxa * meses
                     valor_parcela = (valor + total_juros) / meses
                 else:
                     total_juros = valor * taxa
                     valor_parcela = valor + total_juros
-
-                st.success(f"## 💰 Valor da Parcela: {formatar_moeda(valor_parcela)}")
-                # Construir tabela simples
+                
                 for i in range(1, meses + 1):
                     tabela.append({
                         "Mês": i,
@@ -380,10 +373,11 @@ def page_cobranca():
                         "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
                         "Total Pago": valor_parcela * i
                     })
-    
                 
-             # Exibição da tabela se necessário
-            if mostrar_todas and tabela:
+                st.success(f"## 💰 Valor da Parcela: {formatar_moeda(valor_parcela)}")
+
+            # Exibição dos resultados
+            if tabela:
                 df = pd.DataFrame(tabela)
                 df['Mês'] = df['Mês'].astype(int)
                 
@@ -401,57 +395,47 @@ def page_cobranca():
                     height=400
                 )
                 
-            # Gráfico aprimorado
-            fig = px.line(
-                df, 
-                x="Mês", 
-                y="Parcela", 
-                title="📈 Evolução das Parcelas",
-                markers=True,
-                line_shape="linear",
-                color_discrete_sequence=["#2ecc71"]
-            )
-            fig.update_layout(
-                xaxis_title="Mês",
-                yaxis_title="Valor da Parcela",
-                plot_bgcolor='rgba(240, 240, 240, 0.9)',
-                xaxis=dict(tickmode='linear', dtick=1),
-                hoverlabel=dict(bgcolor="white")
-            )
-            st.plotly_chart(fig, use_container_width=True)
+                
+                # Gráfico
+                fig = px.line(
+                    df, 
+                    x="Mês", 
+                    y="Parcela",
+                    title="📈 Evolução das Parcelas",
+                    markers=True,
+                    line_shape="linear",
+                    color_discrete_sequence=["#2ecc71"]
+                )
+                fig.update_layout(
+                    xaxis_title="Mês",
+                    yaxis_title="Valor da Parcela",
+                    plot_bgcolor='rgba(240, 240, 240, 0.9)',
+                    hoverlabel=dict(bgcolor="white"),
+                    xaxis=dict(tickmode='linear', dtick=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
             st.error(f"## ❌ Erro no cálculo: {str(e)}")
-            
-        # Seção de ajuda
+
+    # Seção de ajuda
     with st.expander("ℹ️ Explicação dos Métodos", expanded=False):
         st.markdown("""
-        <style>
-        .method-card {
-            padding: 20px;
-            border-radius: 10px;
-            margin: 10px 0;
-            background-color: #f8f9fa;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        </style>
-
-        <div class="method-card">
-        <h4>🏦 Financiamento</h4>
-        <ul>
-            <li><b>Price:</b> Parcelas fixas com juros compostos</li>
-            <li><b>SAC:</b> Amortização constante com parcelas decrescentes</li>
-            <li><b>SACRE:</b> Sistema misto com amortização crescente</li>
-            <li><b>MEJS:</b> Juros simples com amortização antecipada</li>
-        </ul>
+        <div style="padding:20px; border-radius:10px; margin:10px 0; background-color:#f8f9fa; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+            <h4>🏦 Financiamento</h4>
+            <ul>
+                <li><b>Price:</b> Parcelas fixas com juros compostos</li>
+                <li><b>SAC:</b> Amortização constante com parcelas decrescentes</li>
+                <li><b>SACRE:</b> Sistema misto com amortização crescente</li>
+                <li><b>MEJS:</b> Juros simples com amortização antecipada</li>
+            </ul>
         </div>
-
-        <div class="method-card">
-        <h4>💳 Parcelamento Simples</h4>
-        <ul>
-            <li>Cálculo direto das taxas da máquina de cartão</li>
-            <li>Juros aplicados sobre o valor total</li>
-            <li>Opções à vista ou parcelado</li>
-        </ul>
+        <div style="padding:20px; border-radius:10px; margin:10px 0; background-color:#f8f9fa; box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+            <h4>💳 Parcelamento Simples</h4>
+            <ul>
+                <li>Cálculo direto das taxas do cartão</li>
+                <li>Juros aplicados sobre o valor total</li>
+                <li>Opções à vista ou parcelado</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
