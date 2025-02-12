@@ -306,75 +306,75 @@ def page_parcelamento_cartao():
                 2\. {formatar_moeda(total_com_juros).replace('$', '\\$')} ÷ {num_parcelas} = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
                 """)
 
-    def page_calculadora_parcelamento():
-        st.title("Calculadora de Parcelamento")
-        
-        # Entrada de dados
-        valor_total = st.number_input(
-            "Valor Total (R$)", 
-            min_value=0.01, 
-            step=100.0,
-            format="%.2f"
-        )
-        
-        tipo_parcelamento = st.selectbox(
-            "Tipo de Parcelamento",
-            options=list(TAXAS.keys())
-        )
-        
-        num_parcelas = st.selectbox(
-        "Número de Parcelas",
-        options=list(TAXAS[tipo_parcelamento].keys()),
-        format_func=lambda x: f"{x}X" if isinstance(x, int) else x
-    )
-        
-        # Obter taxa selecionada com regras especiais para Visa
-        if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
-            taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
-            taxa = taxa_base * num_parcelas
-        else:
-            taxa = TAXAS[tipo_parcelamento][num_parcelas]
-        
     
-        
-        # Calcular e mostrar resultados
-        if valor_total > 0:
-            mostrar_calculo(valor_total, taxa, num_parcelas, tipo_parcelamento)
-            
-            # Mostrar tabela comparativa de taxas
-            st.subheader("Tabela Completa de Taxas")
-            
-            # Configurar pandas para mostrar todo o conteúdo
-            pd.set_option('display.max_colwidth', None)
-            
-            df_taxas = pd.DataFrame.from_dict(TAXAS[tipo_parcelamento], orient='index', columns=['Taxa'])
-            df_taxas.index.name = 'Parcelas'
-            
-            # Aplicar formatação especial para Visa
-            if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"]:
-                df_taxas['Taxa'] = df_taxas.apply(
-                    lambda x: f"{x['Taxa']:.2%} por parcela" if isinstance(x.name, int) else f"{x['Taxa']:.2%}",
-                    axis=1
-                )
-            else:
-                df_taxas['Taxa'] = df_taxas['Taxa'].apply(lambda x: f"{x:.2%}")
+    st.title("Calculadora de Parcelamento")
+    
+    # Entrada de dados
+    valor_total = st.number_input(
+        "Valor Total (R$)", 
+        min_value=0.01, 
+        step=100.0,
+        format="%.2f"
+    )
+    
+    tipo_parcelamento = st.selectbox(
+        "Tipo de Parcelamento",
+        options=list(TAXAS.keys())
+    )
+    
+    num_parcelas = st.selectbox(
+    "Número de Parcelas",
+    options=list(TAXAS[tipo_parcelamento].keys()),
+    format_func=lambda x: f"{x}X" if isinstance(x, int) else x
+)
+    
+    # Obter taxa selecionada com regras especiais para Visa
+    if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
+        taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
+        taxa = taxa_base * num_parcelas
+    else:
+        taxa = TAXAS[tipo_parcelamento][num_parcelas]
+    
 
-            # Configurar a exibição da tabela
-            with st.container():
-                st.markdown("""
-                <style>
-                    .full-width-table {
-                        width: 100%;
-                        white-space: nowrap;
-                    }
-                    .dataframe td {
-                        min-width: 120px;
-                        padding: 10px !important;
-                    }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                st.dataframe(
-                    df_taxas,
-                    use_container_width=True,
-                    height=(len(df_taxas) * 35 + 40) ) # Altura dinâmica baseada no número de linhas
+    
+    # Calcular e mostrar resultados
+    if valor_total > 0:
+        mostrar_calculo(valor_total, taxa, num_parcelas, tipo_parcelamento)
+        
+        # Mostrar tabela comparativa de taxas
+        st.subheader("Tabela Completa de Taxas")
+        
+        # Configurar pandas para mostrar todo o conteúdo
+        pd.set_option('display.max_colwidth', None)
+        
+        df_taxas = pd.DataFrame.from_dict(TAXAS[tipo_parcelamento], orient='index', columns=['Taxa'])
+        df_taxas.index.name = 'Parcelas'
+        
+        # Aplicar formatação especial para Visa
+        if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"]:
+            df_taxas['Taxa'] = df_taxas.apply(
+                lambda x: f"{x['Taxa']:.2%} por parcela" if isinstance(x.name, int) else f"{x['Taxa']:.2%}",
+                axis=1
+            )
+        else:
+            df_taxas['Taxa'] = df_taxas['Taxa'].apply(lambda x: f"{x:.2%}")
+
+        # Configurar a exibição da tabela
+        with st.container():
+            st.markdown("""
+            <style>
+                .full-width-table {
+                    width: 100%;
+                    white-space: nowrap;
+                }
+                .dataframe td {
+                    min-width: 120px;
+                    padding: 10px !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            st.dataframe(
+                df_taxas,
+                use_container_width=True,
+                height=(len(df_taxas) * 35 + 40) ) # Altura dinâmica baseada no número de linhas

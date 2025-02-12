@@ -208,62 +208,62 @@ def page_cobranca():
         return (pv + total_juros) / meses
 
     # Interface unificada
-    def main():
-        st.title("Calculadora Financeira Integrada")
-        
-        # Seção de seleção de taxa
-        with st.expander("Configurações da Taxa", expanded=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                tipo_parcelamento = st.selectbox("Operadora", options=list(TAXAS.keys()))
-            with col2:
-                num_parcelas = st.selectbox(
-                    "Forma de Pagamento",
-                    options=list(TAXAS[tipo_parcelamento].keys()),
-                    format_func=lambda x: f"{x}X" if isinstance(x, int) else x
-                )
-        
-        # Seção de parâmetros do financiamento
-        with st.expander("Parâmetros do Financiamento", expanded=True):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                valor = st.number_input("Valor Financiado (R$)", min_value=0.01, value=10000.0, step=100.0)
-            with col2:
-                metodo = st.selectbox("Método de Amortização", ["Price", "SAC", "SACRE", "MEJS"])
-            with col3:
-                meses = st.slider("Parcelas", min_value=1, max_value=18, value=12)
-        
-        # Obtenção da taxa
-        if isinstance(num_parcelas, int):
-            taxa = TAXAS[tipo_parcelamento][num_parcelas]
-        else:
-            taxa = TAXAS[tipo_parcelamento][num_parcelas]
-        
-        # Cálculo e exibição
-        if st.button("Calcular"):
-            try:
-                if metodo == "Price":
-                    parcela = calcular_price(valor, taxa, meses)
-                elif metodo == "SAC":
-                    parcelas = calcular_sac(valor, taxa, meses)
-                    parcela = parcelas[0]
-                elif metodo == "SACRE":
-                    parcelas = calcular_sacre(valor, taxa, meses)
-                    parcela = parcelas[0]
-                elif metodo == "MEJS":
-                    parcela = calcular_mejs(valor, taxa, meses)
+    
+    st.title("Calculadora Financeira Integrada")
+    
+    # Seção de seleção de taxa
+    with st.expander("Configurações da Taxa", expanded=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            tipo_parcelamento = st.selectbox("Operadora", options=list(TAXAS.keys()))
+        with col2:
+            num_parcelas = st.selectbox(
+                "Forma de Pagamento",
+                options=list(TAXAS[tipo_parcelamento].keys()),
+                format_func=lambda x: f"{x}X" if isinstance(x, int) else x
+            )
+    
+    # Seção de parâmetros do financiamento
+    with st.expander("Parâmetros do Financiamento", expanded=True):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            valor = st.number_input("Valor Financiado (R$)", min_value=0.01, value=10000.0, step=100.0)
+        with col2:
+            metodo = st.selectbox("Método de Amortização", ["Price", "SAC", "SACRE", "MEJS"])
+        with col3:
+            meses = st.slider("Parcelas", min_value=1, max_value=18, value=12)
+    
+    # Obtenção da taxa
+    if isinstance(num_parcelas, int):
+        taxa = TAXAS[tipo_parcelamento][num_parcelas]
+    else:
+        taxa = TAXAS[tipo_parcelamento][num_parcelas]
+    
+    # Cálculo e exibição
+    if st.button("Calcular"):
+        try:
+            if metodo == "Price":
+                parcela = calcular_price(valor, taxa, meses)
+            elif metodo == "SAC":
+                parcelas = calcular_sac(valor, taxa, meses)
+                parcela = parcelas[0]
+            elif metodo == "SACRE":
+                parcelas = calcular_sacre(valor, taxa, meses)
+                parcela = parcelas[0]
+            elif metodo == "MEJS":
+                parcela = calcular_mejs(valor, taxa, meses)
+            
+            st.success(f"Valor da Parcela ({metodo}): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+            
+            # Tabela de amortização
+            if metodo in ["Price", "SAC", "SACRE"]:
+                df = pd.DataFrame({
+                    "Mês": range(1, meses+1),
+                    "Parcela": parcelas if metodo != "Price" else [parcela]*meses
+                })
+                fig = px.line(df, x="Mês", y="Parcela", title="Evolução das Parcelas")
+                st.plotly_chart(fig)
                 
-                st.success(f"Valor da Parcela ({metodo}): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-                
-                # Tabela de amortização
-                if metodo in ["Price", "SAC", "SACRE"]:
-                    df = pd.DataFrame({
-                        "Mês": range(1, meses+1),
-                        "Parcela": parcelas if metodo != "Price" else [parcela]*meses
-                    })
-                    fig = px.line(df, x="Mês", y="Parcela", title="Evolução das Parcelas")
-                    st.plotly_chart(fig)
-                    
-            except Exception as e:
-                st.error(f"Erro no cálculo: {str(e)}")
+        except Exception as e:
+            st.error(f"Erro no cálculo: {str(e)}")
 
