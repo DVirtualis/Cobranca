@@ -354,6 +354,12 @@ def page_cobranca():
                         })
                 
                 st.success(f"**Valor da Parcela ({metodo}):** {formatar_moeda(parcela)}")
+                # Adicionar cálculo do Total Pago para financiamento
+                total_pago = 0
+                for item in tabela:
+                    total_pago += item["Parcela"]
+                    item["Total Pago"] = total_pago
+                
             else:  # Parcelamento Simples
                 if isinstance(num_parcelas, int):
                     total_juros = valor * taxa * meses
@@ -377,6 +383,10 @@ def page_cobranca():
                 df = pd.DataFrame(tabela)
                 df['Mês'] = df['Mês'].astype(int)
 
+                # Garantir que Total Pago existe para todos os casos
+                if 'Total Pago' not in df.columns:
+                    df['Total Pago'] = df['Parcela'].cumsum()
+
                 # Configurar colunas conforme o modo
                 if modo_calculo == "🏦 Financiamento":
                     cols = ["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor", "Total Pago"]
@@ -393,9 +403,9 @@ def page_cobranca():
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
-                    height=400,
-                    
+                    height=400
                 )
+
 
                 # Gráfico
                 fig = px.line(
