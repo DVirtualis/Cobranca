@@ -379,7 +379,7 @@ def page_cobranca():
 
                 # Configurar colunas conforme o modo
                 if modo_calculo == "🏦 Financiamento":
-                    cols = ["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor"]
+                    cols = ["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor", "Total Pago"]
                     style_cols = cols[1:]
                 else:
                     cols = ["Mês", "Parcela", "Juros", "Total Pago"]
@@ -410,7 +410,6 @@ def page_cobranca():
                 fig.update_layout(
                     xaxis_title="Mês",
                     yaxis_title="Valor da Parcela",
-                    plot_bgcolor='rgba(240, 240, 240, 0.9)',
                     hoverlabel=dict(bgcolor="white"),
                     xaxis=dict(tickmode='linear', dtick=1)
                 )
