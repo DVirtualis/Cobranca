@@ -192,7 +192,7 @@ def page_cobranca():
         "Stone - Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205}
     }
 
-    # Funções de cálculo de amortização (adaptadas para usar as taxas das máquinas)
+     # Funções de cálculo
     def calcular_price(pv, taxa_mensal, meses):
         if taxa_mensal == 0: return pv / meses
         return (pv * taxa_mensal) / (1 - (1 + taxa_mensal)**-meses)
@@ -210,39 +210,34 @@ def page_cobranca():
         total_juros = pv * taxa_mensal * meses
         return (pv + total_juros) / meses
 
-    # Interface unificada
-    
+    # Interface
     st.title("📈 Calculadora Financeira Integrada")
-    
-    
-    # Divisor visual
     st.markdown("---")
-     # Seletor de modo de cálculo com ícones
+    
     modo_calculo = st.radio(
-    "**Selecione o Tipo de Cálculo:**", 
-    ["🏦 Financiamento", "💳 Parcelamento Simples"],
-    horizontal=True,
-    key="modo_calculo_radio"  
+        "**Selecione o Tipo de Cálculo:**", 
+        ["🏦 Financiamento", "💳 Parcelamento Simples"],
+        horizontal=True,
+        key="modo_calculo_radio"
     )
     
-      # Seção de seleção de taxa
-      
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
         col1, col2 = st.columns([2, 3])
         with col1:
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
                 options=list(TAXAS.keys()),
-                key="operadora_select",
-                help="Selecione a operadora do cartão"
+                key="operadora_select"
             )
         with col2:
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
                 options=list(TAXAS[tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
-                help="Selecione o número de parcelas ou forma de pagamento"
-             )
+                key="forma_pagamento"
+            )
+    
+    # Inicialização segura das variáveis
     valor = 0.0
     desconto = 0.0
     meses = 1
@@ -252,16 +247,16 @@ def page_cobranca():
             col1, col2 = st.columns([3, 2])
             with col1:
                 valor = st.number_input("**Valor Bruto (R$)**", 
-                                    min_value=0.01, 
-                                    value=10000.0, 
-                                    step=100.0,
-                                    key="valor_bruto")
+                                      min_value=0.01, 
+                                      value=10000.0, 
+                                      step=100.0,
+                                      key="valor_bruto")
                 desconto = st.number_input("**Desconto (R$)**", 
-                                        min_value=0.0, 
-                                        max_value=valor if valor > 0 else 0.0, 
-                                        value=0.0, 
-                                        step=100.0,
-                                        key="desconto")
+                                         min_value=0.0, 
+                                         max_value=valor if valor > 0 else 0.0, 
+                                         value=0.0, 
+                                         step=100.0,
+                                         key="desconto")
             with col2:
                 percentual = (desconto / valor * 100) if valor > 0 else 0.0
                 st.metric("**Percentual de Desconto**", f"{percentual:.2f}%")
@@ -276,10 +271,10 @@ def page_cobranca():
             col1, col2 = st.columns([3, 2])
             with col1:
                 valor = st.number_input("**Valor Total (R$)**", 
-                                    min_value=0.01, 
-                                    value=10000.0, 
-                                    step=100.0,
-                                    key="valor_total")
+                                      min_value=0.01, 
+                                      value=10000.0, 
+                                      step=100.0,
+                                      key="valor_total")
             with col2:
                 meses = num_parcelas if isinstance(num_parcelas, int) else 1
                 st.metric("**Parcelas**", meses if isinstance(num_parcelas, int) else "À Vista")
@@ -294,6 +289,7 @@ def page_cobranca():
             valor_base = valor - desconto if modo_calculo == "🏦 Financiamento" else valor
 
             if modo_calculo == "🏦 Financiamento":
+                # Cálculos de financiamento
                 if metodo == "Price":
                     parcela = calcular_price(valor_base, taxa, meses)
                     saldo = valor_base
@@ -380,22 +376,27 @@ def page_cobranca():
             if tabela:
                 df = pd.DataFrame(tabela)
                 df['Mês'] = df['Mês'].astype(int)
-                
-                # Estilização da tabela
+
+                # Configurar colunas conforme o modo
+                if modo_calculo == "🏦 Financiamento":
+                    cols = ["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor"]
+                    style_cols = cols[1:]
+                else:
+                    cols = ["Mês", "Parcela", "Juros", "Total Pago"]
+                    style_cols = cols[1:]
+
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
-                    df.style.format({
-                        "Parcela": lambda x: formatar_moeda(x),
-                        "Juros": lambda x: formatar_moeda(x),
-                        "Total Pago": lambda x: formatar_moeda(x)
+                    df[cols].style.format({
+                        col: lambda x: formatar_moeda(x) for col in style_cols
                     }).applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
-                    height=400
+                    height=400,
+                    
                 )
-                
-                
+
                 # Gráfico
                 fig = px.line(
                     df, 
@@ -439,3 +440,5 @@ def page_cobranca():
             </ul>
         </div>
         """, unsafe_allow_html=True)
+        
+        
