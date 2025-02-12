@@ -301,7 +301,8 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Mensal": taxa
                         })
                 
                 elif metodo == "SAC":
@@ -316,7 +317,8 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Mensal": taxa
                         })
                 
                 elif metodo == "SACRE":
@@ -333,7 +335,8 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Mensal": taxa
                         })
                 
                 elif metodo == "MEJS":
@@ -348,7 +351,8 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Mensal": taxa
                         })
 
                 
@@ -387,7 +391,7 @@ def page_cobranca():
                         
                         **Parâmetros:**  
                         - Amortização Constante = {formatar_moeda(valor_base/meses).replace('$', '\\$')}  
-                        - Taxa Mensal = {taxa:.4%}  
+             
                         """)
                     
                     elif metodo == "SACRE":
@@ -399,7 +403,7 @@ def page_cobranca():
                         **Componentes:**  
                         - Fator Mensal = {1 + taxa:.5f}  
                         - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')} 
-                        - Taxa Mensal = {taxa:.4%}
+                       
                         """)
                     
                     elif metodo == "MEJS":
@@ -412,7 +416,7 @@ def page_cobranca():
                         **Cálculo Direto:**  
                         - Juros Totais = {formatar_moeda(total_juros).replace('$', '\\$')}  
                         - Parcela = ({formatar_moeda(valor_base).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
-                        - Taxa Mensal = {taxa:.4%}                       
+                                          
                         """)
 
             else:  # Parcelamento Simples
