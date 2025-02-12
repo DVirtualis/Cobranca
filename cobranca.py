@@ -286,7 +286,7 @@ def page_cobranca():
         try:
             tabela = []
             taxa = TAXAS[tipo_parcelamento][num_parcelas]
-            valor_base = valor - desconto if modo_calculo == "🏦 Financiamento" else valor
+            valor_base = valor - desconto 
 
             if modo_calculo == "🏦 Financiamento":
                 # Cálculos de financiamento
@@ -339,6 +339,7 @@ def page_cobranca():
                 
                 elif metodo == "MEJS":
                     parcela = calcular_mejs(valor_base, taxa, meses)
+                    
                     saldo = valor_base
                     amort = valor_base / meses
                     for i in range(1, meses+1):
@@ -353,7 +354,6 @@ def page_cobranca():
                         })
                 
                 st.success(f"**Valor da Parcela ({metodo}):** {formatar_moeda(parcela)}")
-
             else:  # Parcelamento Simples
                 if isinstance(num_parcelas, int):
                     total_juros = valor * taxa * meses
