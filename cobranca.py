@@ -218,10 +218,12 @@ def page_cobranca():
     # Divisor visual
     st.markdown("---")
      # Seletor de modo de cálculo com ícones
-    modo_calculo = st.radio("**Selecione o Tipo de Cálculo:**", 
-                           ["🏦 Financiamento", "💳 Parcelamento Simples"],
-                           horizontal=True,
-                           help="Escolha entre cálculo de financiamento com amortização ou parcelamento direto")
+    modo_calculo = st.radio(
+    "**Selecione o Tipo de Cálculo:**", 
+    ["🏦 Financiamento", "💳 Parcelamento Simples"],
+    horizontal=True,
+    key="modo_calculo_radio"  
+    )
     
       # Seção de seleção de taxa
       
@@ -231,6 +233,7 @@ def page_cobranca():
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
                 options=list(TAXAS.keys()),
+                key="operadora_select",
                 help="Selecione a operadora do cartão"
             )
         with col2:
@@ -250,6 +253,7 @@ def page_cobranca():
                                       min_value=0.01, 
                                       value=10000.0, 
                                       step=100.0,
+                                       key="valor_bruto_input",
                                       help="Valor total antes dos descontos")
                 desconto = st.number_input("**Desconto (R$)**", 
                                          min_value=0.0, 
