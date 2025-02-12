@@ -221,10 +221,15 @@ def page_cobranca():
     
       # Seção de seleção de taxa
     with st.expander("Configurações da Taxa", expanded=True):
-        col1, col2 = st.columns(2)
+        col1, col2,col3 = st.columns(3)
         with col1:
-            tipo_parcelamento = st.selectbox("Operadora", options=list(TAXAS.keys()))
+             # Seletor de modo de cálculo
+            modo_calculo = st.radio("Selecione o Tipo de Cálculo:", 
+                                ["Financiamento", "Parcelamento Simples"],
+                                horizontal=True)
         with col2:
+            tipo_parcelamento = st.selectbox("Operadora", options=list(TAXAS.keys()))
+        with col3:
             num_parcelas = st.selectbox(
                 "Forma de Pagamento",
                 options=list(TAXAS[tipo_parcelamento].keys()),
