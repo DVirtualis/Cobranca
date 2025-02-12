@@ -236,6 +236,25 @@ def page_cobranca():
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
+            # Mostra a taxa selecionada em formato de card
+            taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
+            st.markdown(
+                f"""
+                <div style="
+                    background-color: {theme_config['theme.secondaryBackgroundColor']};
+                    padding: 0.75rem;
+                    border-radius: 10px;
+                    border: 1px solid {theme_config['theme.primaryColor']};
+                    margin-top: 1rem;
+                    text-align: center;
+                ">
+                    <p style="margin: 0; font-size: 1.1rem; color: {theme_config['theme.textColor']}">
+                        <strong>Taxa Mensal Aplicada:</strong> {taxa_selecionada:.2%}
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
     
     # Inicialização segura das variáveis
     valor = 0.0
@@ -300,9 +319,9 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
+                            "Taxa Mensal": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0),
-                            "Taxa Mensal": taxa
+                            "Saldo Devedor": max(saldo, 0)
                         })
                 
                 elif metodo == "SAC":
@@ -316,9 +335,9 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
+                            "Taxa Mensal": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0),
-                            "Taxa Mensal": taxa
+                            "Saldo Devedor": max(saldo, 0)
                         })
                 
                 elif metodo == "SACRE":
@@ -334,9 +353,9 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
+                            "Taxa Mensal": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0),
-                            "Taxa Mensal": taxa
+                            "Saldo Devedor": max(saldo, 0)
                         })
                 
                 elif metodo == "MEJS":
@@ -350,9 +369,10 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
+                            "Taxa Mensal": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0),
-                            "Taxa Mensal": taxa
+                            "Saldo Devedor": max(saldo, 0)
+                            
                         })
 
                 
@@ -432,6 +452,7 @@ def page_cobranca():
                         "Mês": i,
                         "Parcela": valor_parcela,
                         "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
+                        "Taxa Mensal": taxa,
                         "Total Pago": valor_parcela * i
                     })
                 
