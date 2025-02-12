@@ -267,5 +267,3 @@ def page_cobranca():
             except Exception as e:
                 st.error(f"Erro no cálculo: {str(e)}")
 
-    if __name__ == "__main__":
-        main()

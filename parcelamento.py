@@ -378,7 +378,3 @@ def page_parcelamento_cartao():
                     df_taxas,
                     use_container_width=True,
                     height=(len(df_taxas) * 35 + 40) ) # Altura dinâmica baseada no número de linhas
-
-    if __name__ == "__main__":
-        page_parcelamento_cartao()
-        page_calculadora_parcelamento()
