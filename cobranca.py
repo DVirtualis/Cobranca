@@ -398,7 +398,8 @@ def page_cobranca():
                         
                         **Componentes:**  
                         - Fator Mensal = {1 + taxa:.5f}  
-                        - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')}  
+                        - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')} 
+                        - Taxa Mensal = {taxa:.4%}
                         """)
                     
                     elif metodo == "MEJS":
@@ -411,6 +412,7 @@ def page_cobranca():
                         **Cálculo Direto:**  
                         - Juros Totais = {formatar_moeda(total_juros).replace('$', '\\$')}  
                         - Parcela = ({formatar_moeda(valor_base).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
+                        - Taxa Mensal = {taxa:.4%}                       
                         """)
 
             else:  # Parcelamento Simples
@@ -460,7 +462,7 @@ def page_cobranca():
                     df['Total Pago'] = df['Parcela'].cumsum()
 
                 # Configurar colunas
-                cols = ["Mês", "Parcela", "Juros", "Total Pago"]
+                cols = ["Mês", "Parcela", "Juros", "Taxa Mensal","Total Pago"]
                 if modo_calculo == "🏦 Financiamento":
                     cols.insert(3, "Amortização")
                     cols.insert(4, "Saldo Devedor")
@@ -471,6 +473,7 @@ def page_cobranca():
                         col: lambda x: formatar_moeda(x) for col in cols[1:]
                     }).applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
+                .applymap(lambda x: 'color: #3458aa;', subset=['Taxa Mensal'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
                     height=400
