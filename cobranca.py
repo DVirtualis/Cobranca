@@ -214,7 +214,12 @@ def page_cobranca():
     
     st.title("Calculadora Financeira Integrada")
     
-     # Seção de seleção de taxa
+     # Seletor de modo de cálculo
+    modo_calculo = st.radio("Selecione o Tipo de Cálculo:", 
+                           ["Financiamento", "Parcelamento Simples"],
+                           horizontal=True)
+    
+      # Seção de seleção de taxa
     with st.expander("Configurações da Taxa", expanded=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -225,34 +230,33 @@ def page_cobranca():
                 options=list(TAXAS[tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x
             )
-   # Seção de parâmetros do financiamento
-    with st.expander("Parâmetros do Financiamento", expanded=True):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            valor = st.number_input("Valor Bruto (R$)", min_value=0.01, value=10000.0, step=100.0)
-        with col2:
-            desconto = st.number_input("Desconto (R$)", min_value=0.0, max_value=valor, value=0.0, step=100.0)
-        with col3:
-            if valor > 0:
-                percentual_desconto = (desconto / valor) * 100
-            else:
-                percentual_desconto = 0.0
-            st.metric("Percentual de Desconto", f"{percentual_desconto:.2f}%")
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
+   # Seção condicional para financiamento
+    if modo_calculo == "Financiamento":
+        with st.expander("Parâmetros do Financiamento", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                valor = st.number_input("Valor Bruto (R$)", min_value=0.01, value=10000.0, step=100.0)
+                desconto = st.number_input("Desconto (R$)", min_value=0.0, max_value=valor, value=0.0, step=100.0)
+            with col2:
+                if valor > 0:
+                    percentual_desconto = (desconto / valor) * 100
+                else:
+                    percentual_desconto = 0.0
+                st.metric("Percentual de Desconto", f"{percentual_desconto:.2f}%")
+                st.metric("Valor Líquido", formatar_moeda(valor - desconto))
+                
             metodo = st.selectbox("Método de Amortização", ["Price", "SAC", "SACRE", "MEJS"])
-        with col2:
-            valor_liquido = valor - desconto
-            st.metric("Valor Líquido", formatar_moeda(valor_liquido))
-        with col3:
-            # Determinar número de parcelas automaticamente
-            if isinstance(num_parcelas, int):
-                meses = num_parcelas
-                st.metric("Parcelas", num_parcelas)
-            else:
-                meses = 1
-                st.metric("Forma de Pagamento", "À Vista")
+            meses = num_parcelas if isinstance(num_parcelas, int) else 1
+    else:  # Modo Parcelamento Simples
+        with st.expander("Parâmetros do Parcelamento", expanded=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                valor = st.number_input("Valor Total (R$)", min_value=0.01, value=10000.0, step=100.0)
+            with col2:
+                meses = num_parcelas if isinstance(num_parcelas, int) else 1
+                st.metric("Parcelas", meses)
+
+
 
     mostrar_todas = st.checkbox("Mostrar tabela completa de amortização")
     
@@ -337,24 +341,55 @@ def page_cobranca():
                         "Amortização": amort,
                         "Saldo Devedor": max(saldo, 0)
                     })
+            else:  # Parcelamento Simples
+                if isinstance(num_parcelas, int):
+                    total_juros = valor * (taxa * meses)
+                    valor_parcela = (valor + total_juros) / meses
+                else:
+                    total_juros = valor * taxa
+                    valor_parcela = valor + total_juros
 
+                st.success(f"Valor da Parcela: {formatar_moeda(valor_parcela)}")
+                # Construir tabela simples
+                for i in range(1, meses + 1):
+                    tabela.append({
+                        "Mês": i,
+                        "Parcela": valor_parcela,
+                        "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
+                        "Total Pago": valor_parcela * i
+                    })    
+                
              # Exibição da tabela se necessário
             if mostrar_todas and tabela:
                 df = pd.DataFrame(tabela)
-                st.subheader("Tabela de Amortização Detalhada")
+                df['Mês'] = df['Mês'].astype(int)  # Garantir meses inteiros
+                
+                st.subheader("Detalhamento do Parcelamento")
                 st.dataframe(
                     df.style.format({
                         "Parcela": lambda x: formatar_moeda(x),
-                        "Juros": lambda x: formatar_moeda(x), 
-                        "Amortização": lambda x: formatar_moeda(x),
-                        "Saldo Devedor": lambda x: formatar_moeda(x)
+                        "Juros": lambda x: formatar_moeda(x),
+                        "Total Pago": lambda x: formatar_moeda(x)
                     }),
                     use_container_width=True
                 )
                 
                 # Gráfico de evolução
-                fig = px.line(df, x="Mês", y="Parcela", title="Evolução das Parcelas")
+                #
+                fig = px.line(df, x="Mês", y="Parcela", 
+                            title="Evolução das Parcelas",
+                            labels={"Mês": "Mês (Número Inteiro)", "Parcela": "Valor da Parcela"})
+                
+                fig.update_xaxes(type='category', tickvals=df['Mês'].unique())
                 st.plotly_chart(fig)
 
         except Exception as e:
             st.error(f"Erro no cálculo: {str(e)}")
+            
+        st.markdown("""
+    ### Explicação dos Métodos:
+    - **Price (Tabela Price):** Parcelas constantes com juros compostos.  
+    - **SAC (Sistema de Amortização Constante):** Parcelas decrescentes com amortização constante.  
+    - **SACRE (Sistema de Amortização Crescente):** Amortização crescente com parcelas variáveis.  
+    - **MEJS:** Método de Equivalência a Juros Simples com maior amortização inicial.  
+    """)
