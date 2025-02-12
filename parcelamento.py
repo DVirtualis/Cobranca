@@ -329,7 +329,7 @@ def page_parcelamento_cartao():
 )
     
     # Obter taxa selecionada com regras especiais para Visa
-    if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
+    if tipo_parcelamento in ["Stone - Visa", "Stone - Visa Crédito com Juros"] and isinstance(num_parcelas, int):
         taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
         taxa = taxa_base * num_parcelas
     else:
@@ -351,7 +351,7 @@ def page_parcelamento_cartao():
         df_taxas.index.name = 'Parcelas'
         
         # Aplicar formatação especial para Visa
-        if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"]:
+        if tipo_parcelamento in ["Stone - Visa", "Stone - Visa Crédito com Juros"]:
             df_taxas['Taxa'] = df_taxas.apply(
                 lambda x: f"{x['Taxa']:.2%} por parcela" if isinstance(x.name, int) else f"{x['Taxa']:.2%}",
                 axis=1
