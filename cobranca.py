@@ -180,7 +180,10 @@ def page_cobranca():
         """,
         unsafe_allow_html=True
     )
-
+ # Função de formatação monetária
+    def formatar_moeda(valor):
+        """Formata valores monetários no padrão brasileiro"""
+        return f"R$ {valor: ,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     # Configuração das taxas de juros das máquinas (mantido do seu código original)
     TAXAS = {
         "Point": {2: 0.0442, 3: 0.0532, 4: 0.0622, 5: 0.0712, 6: 0.0802, 7: 0.0892, 8: 0.0982, 9: 0.1072, 10: 0.1162, 11: 0.1252, 12: 0.1342},
@@ -211,7 +214,7 @@ def page_cobranca():
     
     st.title("Calculadora Financeira Integrada")
     
-    # Seção de seleção de taxa
+     # Seção de seleção de taxa
     with st.expander("Configurações da Taxa", expanded=True):
         col1, col2 = st.columns(2)
         with col1:
@@ -222,38 +225,54 @@ def page_cobranca():
                 options=list(TAXAS[tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x
             )
-    
-    # Seção de parâmetros do financiamento
+   # Seção de parâmetros do financiamento
     with st.expander("Parâmetros do Financiamento", expanded=True):
         col1, col2, col3 = st.columns(3)
         with col1:
-            valor = st.number_input("Valor Financiado (R$)", min_value=0.01, value=10000.0, step=100.0)
+            valor = st.number_input("Valor Bruto (R$)", min_value=0.01, value=10000.0, step=100.0)
         with col2:
-            metodo = st.selectbox("Método de Amortização", ["Price", "SAC", "SACRE", "MEJS"])
+            desconto = st.number_input("Desconto (R$)", min_value=0.0, max_value=valor, value=0.0, step=100.0)
         with col3:
-            meses = st.slider("Parcelas", min_value=1, max_value=18, value=12)
-    
-    
+            if valor > 0:
+                percentual_desconto = (desconto / valor) * 100
+            else:
+                percentual_desconto = 0.0
+            st.metric("Percentual de Desconto", f"{percentual_desconto:.2f}%")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            metodo = st.selectbox("Método de Amortização", ["Price", "SAC", "SACRE", "MEJS"])
+        with col2:
+            valor_liquido = valor - desconto
+            st.metric("Valor Líquido", formatar_moeda(valor_liquido))
+        with col3:
+            # Determinar número de parcelas automaticamente
+            if isinstance(num_parcelas, int):
+                meses = num_parcelas
+                st.metric("Parcelas", num_parcelas)
+            else:
+                meses = 1
+                st.metric("Forma de Pagamento", "À Vista")
+
     mostrar_todas = st.checkbox("Mostrar tabela completa de amortização")
     
-    # Obtenção da taxa
-    if isinstance(num_parcelas, int):
-        taxa = TAXAS[tipo_parcelamento][num_parcelas]
-    else:
-        taxa = TAXAS[tipo_parcelamento][num_parcelas]
+    
+     # Obtenção da taxa
+    taxa = TAXAS[tipo_parcelamento][num_parcelas] if isinstance(num_parcelas, int) else TAXAS[tipo_parcelamento][num_parcelas]
+    
    
   # Cálculo e exibição
     if st.button("Calcular"):
         try:
             tabela = []
             parcelas = []
-            
+            valor_liquido = valor - desconto  # Valor líquido após desconto
             if metodo == "Price":
-                parcela = calcular_price(valor, taxa, meses)
+                parcela = calcular_price(valor_liquido, taxa, meses)
                 parcelas = [parcela] * meses
-                st.success(f"Valor da Parcela (Price): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                st.success(f"Valor da Parcela (Price): {formatar_moeda(parcela)}")
                 
-                saldo = valor
+                saldo = valor_liquido
                 for i in range(1, meses+1):
                     juros = saldo * taxa
                     amort = parcela - juros
@@ -267,11 +286,11 @@ def page_cobranca():
                     })
 
             elif metodo == "SAC":
-                parcelas = calcular_sac(valor, taxa, meses)
+                parcelas = calcular_sac(valor_liquido, taxa, meses)
                 st.success(f"Primeira Parcela (SAC): R$ {parcelas[0]:,.2f}")
                 
-                saldo = valor
-                amort = valor / meses
+                saldo = valor_liquido
+                amort = valor_liquido / meses
                 for i, parcela in enumerate(parcelas, 1):
                     juros = saldo * taxa
                     saldo -= amort
@@ -284,11 +303,11 @@ def page_cobranca():
                     })
 
             elif metodo == "SACRE":
-                parcelas = calcular_sacre(valor, taxa, meses)
+                parcelas = calcular_sacre(valor_liquido, taxa, meses)
                 st.success(f"Primeira Parcela (SACRE): R$ {parcelas[0]:,.2f}")
                 
-                saldo = valor
-                amort_base = valor / meses
+                saldo = valor_liquido
+                amort_base = valor_liquido / meses
                 fator = 1 + taxa
                 for i, parcela in enumerate(parcelas, 1):
                     juros = saldo * taxa
@@ -303,13 +322,13 @@ def page_cobranca():
                     })
 
             elif metodo == "MEJS":
-                parcela = calcular_mejs(valor, taxa, meses)
+                parcela = calcular_mejs(valor_liquido, taxa, meses)
                 st.success(f"Valor da Parcela (MEJS): R$ {parcela:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
                 
-                saldo = valor
-                amort = valor / meses
+                saldo = valor_liquido
+                amort = valor_liquido / meses
                 for i in range(1, meses+1):
-                    juros = valor * taxa
+                    juros = valor_liquido * taxa
                     saldo -= amort
                     tabela.append({
                         "Mês": i,
@@ -319,16 +338,16 @@ def page_cobranca():
                         "Saldo Devedor": max(saldo, 0)
                     })
 
-            # Exibição da tabela se necessário
+             # Exibição da tabela se necessário
             if mostrar_todas and tabela:
                 df = pd.DataFrame(tabela)
                 st.subheader("Tabela de Amortização Detalhada")
                 st.dataframe(
                     df.style.format({
-                        "Parcela": "{:,.2f}",
-                        "Juros": "{:,.2f}", 
-                        "Amortização": "{:,.2f}",
-                        "Saldo Devedor": "{:,.2f}"
+                        "Parcela": lambda x: formatar_moeda(x),
+                        "Juros": lambda x: formatar_moeda(x), 
+                        "Amortização": lambda x: formatar_moeda(x),
+                        "Saldo Devedor": lambda x: formatar_moeda(x)
                     }),
                     use_container_width=True
                 )
@@ -337,7 +356,5 @@ def page_cobranca():
                 fig = px.line(df, x="Mês", y="Parcela", title="Evolução das Parcelas")
                 st.plotly_chart(fig)
 
-        except ZeroDivisionError:
-            st.error("O número de meses deve ser maior que zero")
         except Exception as e:
             st.error(f"Erro no cálculo: {str(e)}")
