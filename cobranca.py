@@ -473,7 +473,6 @@ def page_cobranca():
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
-                    index=False,
                     height=400
                 )
 
