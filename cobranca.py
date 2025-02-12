@@ -366,15 +366,15 @@ def page_cobranca():
                         `P = (PV * i) / (1 - (1 + i)^-n)`  
                         
                         **Valores Aplicados:**  
-                        - PV (Valor Presente) = {formatar_moeda(valor_base)}  
+                        - PV (Valor Presente) = {formatar_moeda(valor_base).replace('$', '\\$')}  
                         - i (Taxa Mensal) = {taxa:.4%}  
                         - n (Períodos) = {meses}  
                         
                         **Cálculo:**  
                         ```python
-                        P = ({formatar_moeda(valor_base)} * {taxa:.4%}) 
+                        P = ({formatar_moeda(valor_base).replace('$', '\\$')} * {taxa:.4%}) 
                         / (1 - (1 + {taxa:.4%})^-{meses})
-                        = {formatar_moeda(parcela)}
+                        = {formatar_moeda(parcela).replace('$', '\\$')}
                         ```
                         """)
                     
@@ -386,7 +386,7 @@ def page_cobranca():
                         `Parcela = Amortização + Juros`  
                         
                         **Parâmetros:**  
-                        - Amortização Constante = {formatar_moeda(valor_base/meses)}  
+                        - Amortização Constante = {formatar_moeda(valor_base/meses).replace('$', '\\$')}  
                         - Taxa Mensal = {taxa:.4%}  
                         """)
                     
@@ -398,7 +398,7 @@ def page_cobranca():
                         
                         **Componentes:**  
                         - Fator Mensal = {1 + taxa:.5f}  
-                        - Amortização Base = {formatar_moeda(valor_base/meses)}  
+                        - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')}  
                         """)
                     
                     elif metodo == "MEJS":
@@ -409,8 +409,8 @@ def page_cobranca():
                         `Parcela = (PV + Total Juros) / n`  
                         
                         **Cálculo Direto:**  
-                        - Juros Totais = {formatar_moeda(total_juros)}  
-                        - Parcela = ({formatar_moeda(valor_base)} + {formatar_moeda(total_juros)}) / {meses}  
+                        - Juros Totais = {formatar_moeda(total_juros).replace('$', '\\$')}  
+                        - Parcela = ({formatar_moeda(valor_base).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
                         """)
 
             else:  # Parcelamento Simples
@@ -429,7 +429,6 @@ def page_cobranca():
                         "Total Pago": valor_parcela * i
                     })
                 
-                st.success(f"## 💰 Valor da Parcela: {formatar_moeda(valor_parcela)}")
                 
                 # Detalhes do cálculo
                 with st.expander("🧮 Detalhes do Cálculo", expanded=False):
@@ -440,8 +439,8 @@ def page_cobranca():
                         `Valor Parcela = (Valor + Total Juros) / Parcelas`  
                         
                         **Aplicação:**  
-                        1. Total Juros = {formatar_moeda(valor)} * {taxa:.4%} * {meses} = {formatar_moeda(total_juros)}  
-                        2. Valor Parcela = ({formatar_moeda(valor)} + {formatar_moeda(total_juros)}) / {meses}  
+                        1. Total Juros = {formatar_moeda(valor).replace('$', '\\$')} * {taxa:.4%} * {meses} = {formatar_moeda(total_juros).replace('$', '\\$')}  
+                        2. Valor Parcela = ({formatar_moeda(valor).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
                         """)
                     else:
                         st.markdown(f"""
@@ -449,7 +448,7 @@ def page_cobranca():
                         `Valor Total = Valor * (1 + Taxa)`  
                         
                         **Cálculo:**  
-                        {formatar_moeda(valor)} * (1 + {taxa:.4%}) = {formatar_moeda(valor_parcela)}  
+                        {formatar_moeda(valor).replace('$', '\\$')} * (1 + {taxa:.4%}) = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
                         """)
 
             # Exibição dos resultados
@@ -474,6 +473,7 @@ def page_cobranca():
                     .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                     use_container_width=True,
+                    index=False,
                     height=400
                 )
 
