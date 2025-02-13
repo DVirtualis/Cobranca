@@ -238,24 +238,26 @@ def page_cobranca():
         col1, col2, col3 = st.columns([2, 2, 3])
 
         with col1:
-            # Exibir opções com imagem dentro do SelectBox
+            # Seleção de Máquina
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
-                format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
         
         with col2:
-            # Exibir Operadora com imagem dentro do SelectBox
-            def format_operadora(op):
-                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25">' if op in LOGOS_OPERADORAS else ""
-                return f"{logo_html} {op}"
-            
-            tipo_parcelamento = st.selectbox(
+            # Usando st.radio para exibir operadora com imagem
+            operadoras = list(MAQUINAS[maquina].keys())
+            operadora_html = [
+                f'<div>{f"<img src={LOGOS_OPERADORAS[op]} width=25> {op}" if op in LOGOS_OPERADORAS else op}</div>'
+                for op in operadoras
+            ]
+            tipo_parcelamento = st.radio(
                 "**Operadora**", 
-                options=list(MAQUINAS[maquina].keys()),
-                format_func=format_operadora,
+                options=operadoras, 
+                format_func=lambda op: f"{op}",
+                help="Escolha a operadora", 
+                index=0,
                 key="operadora_select"
             )
 
@@ -266,6 +268,7 @@ def page_cobranca():
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
+
 
             # Mostra a taxa selecionada em formato de card
             taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
