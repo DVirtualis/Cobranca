@@ -479,31 +479,31 @@ def page_cobranca():
                         """)
 
             # Exibição dos resultados
-                if tabela:
-                    df = pd.DataFrame(tabela)
-                    df['Mês'] = df['Mês'].astype(int)
+            if tabela:
+                df = pd.DataFrame(tabela)
+                df['Mês'] = df['Mês'].astype(int)
 
-                    if 'Total Pago' not in df.columns:
-                        df['Total Pago'] = df['Parcela'].cumsum()
+                if 'Total Pago' not in df.columns:
+                    df['Total Pago'] = df['Parcela'].cumsum()
 
-                    # Configurar colunas
-                    cols = ["Mês", "Parcela", "Juros", "Taxa Mensal", "Total Pago"]
-                    if modo_calculo == "🏦 Financiamento":
-                        cols.insert(3, "Amortização")
-                        cols.insert(4, "Saldo Devedor")
+                # Configurar colunas
+                cols = ["Mês", "Parcela", "Juros", "Taxa Mensal","Total Pago"]
+                if modo_calculo == "🏦 Financiamento":
+                    cols.insert(3, "Amortização")
+                    cols.insert(4, "Saldo Devedor")
+                    
 
-                    st.markdown("### 📑 Detalhamento do Parcelamento")
-                    st.dataframe(
-                        df[cols].style.hide(axis='index').format({
-                            # Formatação condicional por coluna
-                            'Taxa Mensal': lambda x: f"{x:.2%}",  # Formato percentual
-                            **{col: formatar_moeda for col in cols[1:] if col != 'Taxa Mensal'}  # Moeda para as demais
-                        }).applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
-                        .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
-                        .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
-                        use_container_width=True,
-                        height=400
-                    )
+                st.markdown("### 📑 Detalhamento do Parcelamento")
+                st.dataframe(
+                    df[cols].style.hide(axis='index').format({
+                        col: lambda x: formatar_moeda(x) for col in cols[1:]
+                    }).applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
+                    .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
+                    .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
+                    use_container_width=True,
+                    height=400
+                )
+
                 # Gráfico
                 fig = px.line(
                     df, 
