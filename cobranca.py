@@ -238,6 +238,10 @@ def page_cobranca():
             )
             # Mostra a taxa selecionada em formato de card
             taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
+            if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
+                taxa_selecionada = taxa_selecionada / num_parcelas  # Taxa total → mensal
+                
+
             st.markdown(
                 f"""
                 <div style="
@@ -305,8 +309,10 @@ def page_cobranca():
         try:
             tabela = []
             taxa = TAXAS[tipo_parcelamento][num_parcelas]
+            if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
+                taxa = taxa / num_parcelas  
+                
             valor_base = valor - desconto 
-
             if modo_calculo == "🏦 Financiamento":
                 if metodo == "Price":
                     parcela = calcular_price(valor_base, taxa, meses)
@@ -495,7 +501,7 @@ def page_cobranca():
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
-                df[cols].style.highlight_null(props="color: transparent;").format({
+                df[cols].style.format({
                     # Formatação específica para cada coluna
                     'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
