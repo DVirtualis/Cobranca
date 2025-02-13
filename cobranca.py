@@ -660,11 +660,12 @@ def page_cobranca():
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
                     df.style.format({
+                        'Mês': lambda x: f"{x:,.0f}",
                         'Taxa Mensal': lambda x: f"{x:.2%}" if x != '-' else '-',
                         'Taxa Total': lambda x: f"{x:.2%}" if x != '-' else '-',
                         **{col: lambda x: formatar_moeda(x) if x != '-' else '-' 
                         for col in valid_cols 
-                        if col not in ['Taxa Mensal', 'Taxa Total']}
+                        if col not in ['Mês','Taxa Mensal', 'Taxa Total']}
                     })
                     .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'])
                     .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
