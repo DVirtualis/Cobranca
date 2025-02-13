@@ -181,6 +181,21 @@ def page_cobranca():
         unsafe_allow_html=True
     )
     
+    
+ # Função de formatação monetária
+    def formatar_moeda(valor):
+        """Formata valores monetários no padrão brasileiro"""
+        return f"R$ {valor: ,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    # Configuração das taxas de juros das máquinas (mantido do seu código original)
+    MAQUINAS = {
+        "Mercado Pago":{
+        "Point": {2: 0.0442, 3: 0.0532, 4: 0.0622, 5: 0.0712, 6: 0.0802, 7: 0.0892, 8: 0.0982, 9: 0.1072, 10: 0.1162, 11: 0.1252, 12: 0.1342},
+        "Link de Pagamento": {"Débito": 0.015, "Crédito a Vista": 0.0310, "Pix":0.0049, 2: 0.0439, 3: 0.0514, 4: 0.0589, 5: 0.0664, 6: 0.0739, 7: 0.0818, 8: 0.0893, 9: 0.0968, 10: 0.1043, 11: 0.1118, 12: 0.1193},
+        },
+        "Stone":{
+        "Stone ISAT - Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
+        "Stone ISAT - Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205}
+    }}
     # Caminhos das imagens das operadoras
     LOGOS_OPERADORAS = {
         "Point": "images/mercado-pago.svg",
@@ -189,18 +204,6 @@ def page_cobranca():
         "Stone ISAT - Visa Crédito com Juros": "images/visa_credito.png"
     }
 
- # Função de formatação monetária
-    def formatar_moeda(valor):
-        """Formata valores monetários no padrão brasileiro"""
-        return f"R$ {valor: ,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    # Configuração das taxas de juros das máquinas (mantido do seu código original)
-    TAXAS = {
-        "Point": {2: 0.0442, 3: 0.0532, 4: 0.0622, 5: 0.0712, 6: 0.0802, 7: 0.0892, 8: 0.0982, 9: 0.1072, 10: 0.1162, 11: 0.1252, 12: 0.1342},
-        "Link de Pagamento": {"Débito": 0.015, "Crédito a Vista": 0.0310, "Pix":0.0049, 2: 0.0439, 3: 0.0514, 4: 0.0589, 5: 0.0664, 6: 0.0739, 7: 0.0818, 8: 0.0893, 9: 0.0968, 10: 0.1043, 11: 0.1118, 12: 0.1193},
-        
-        "Stone ISAT - Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
-        "Stone ISAT - Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205}
-    }
 
      # Funções de cálculo
     def calcular_price(pv, taxa_mensal, meses):
@@ -232,30 +235,48 @@ def page_cobranca():
     )
     
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
-        col1, col2 = st.columns([2, 3])
+        col1, col2,col3 = st.columns([2,2, 3])
         with col1:
+            # Seleção de máquina
+            maquina = st.selectbox(
+                "**Máquina**",
+                options=list(MAQUINAS.keys()),
+                key="maquina_select"
+            )
+            if maquina in LOGOS_OPERADORAS:
+                st.image(LOGOS_OPERADORAS[maquina], width=80)
+        
+        with col2:
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
-                options=list(TAXAS.keys()),
+                options=list(MAQUINAS[maquina].keys()),
                 key="operadora_select"
             )
             # Exibir a imagem correspondente
             if tipo_parcelamento in LOGOS_OPERADORAS:
                 st.image(LOGOS_OPERADORAS[tipo_parcelamento], width=100)
-        with col2:
+        with col3:
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
-                options=list(TAXAS[tipo_parcelamento].keys()),
+                options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
             # Mostra a taxa selecionada em formato de card
-            taxa = TAXAS[tipo_parcelamento][num_parcelas]
-            taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
+            taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+            taxa_selecionada = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
                 taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
 
-                
+                 # Taxa de antecipação
+            taxa_antecipacao = st.number_input(
+                "**Taxa de Antecipação (%)**",
+                min_value=0.0,
+                max_value=100.0,
+                value=2.0,
+                step=0.1,
+                format="%.2f"
+            ) / 100  # Convertendo para decimal
 
             st.markdown(
                 f"""
@@ -333,91 +354,110 @@ def page_cobranca():
     if calcular_btn:
         try:
             tabela = []
-            taxa = TAXAS[tipo_parcelamento][num_parcelas]
-            taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
-            if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1 
- 
-                
+
+            # Aplicação do desconto antes de qualquer cálculo
             valor_base = valor - desconto 
+
+            # Aplicação da taxa de antecipação (caso aplicável)
+            taxa_antecipacao_valor = valor_base * taxa_antecipacao
+            valor_base_ajustado = valor_base + taxa_antecipacao_valor
+
+            # Obtendo a taxa da operadora
+            taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+
+            # Cálculo da taxa mensal para Mercado Pago
+            if maquina == "Mercado Pago" and isinstance(num_parcelas, int):
+                taxa_total = taxa
+                taxa_mensal = (1 + taxa_total) ** (1 / num_parcelas) - 1
+            else:
+                taxa_mensal = taxa
+
+            # Cálculo de financiamento
+            total_pago = 0
+            saldo = valor_base_ajustado
+
             if modo_calculo == "🏦 Financiamento":
                 if metodo == "Price":
-                    parcela = calcular_price(valor_base, taxa, meses)
-                    saldo = valor_base
-                    for i in range(1, meses+1):
+                    parcela = calcular_price(valor_base_ajustado, taxa, meses)
+                    for i in range(1, meses + 1):
                         juros = saldo * taxa
                         amort = parcela - juros
                         saldo -= amort
+                        total_pago += parcela
                         tabela.append({
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa_selecionada,
+                            "Taxa Mensal": taxa_mensal,
                             "Taxa Total": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
                         })
-                
+
                 elif metodo == "SAC":
-                    parcelas = calcular_sac(valor_base, taxa, meses)
-                    saldo = valor_base
-                    amort = valor_base / meses
+                    parcelas = calcular_sac(valor_base_ajustado, taxa, meses)
+                    amort = valor_base_ajustado / meses
                     for i, parcela in enumerate(parcelas, 1):
                         juros = saldo * taxa
                         saldo -= amort
+                        total_pago += parcela
                         tabela.append({
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa_selecionada,
+                            "Taxa Mensal": taxa_mensal,
                             "Taxa Total": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
                         })
-                
+
                 elif metodo == "SACRE":
-                    parcelas = calcular_sacre(valor_base, taxa, meses)
-                    saldo = valor_base
-                    amort_base = valor_base / meses
+                    parcelas = calcular_sacre(valor_base_ajustado, taxa, meses)
+                    amort_base = valor_base_ajustado / meses
                     fator = 1 + taxa
                     for i, parcela in enumerate(parcelas, 1):
                         juros = saldo * taxa
-                        amort = amort_base * (fator**i)
+                        amort = amort_base * (fator ** i)
                         saldo -= amort
+                        total_pago += parcela
                         tabela.append({
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa_selecionada,
+                            "Taxa Mensal": taxa_mensal,
                             "Taxa Total": taxa,
                             "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
-                        })
-                
-                elif metodo == "MEJS":
-                    parcela = calcular_mejs(valor_base, taxa, meses)
-                    saldo = valor_base
-                    amort = valor_base / meses
-                    for i in range(1, meses+1):
-                        juros = valor_base * taxa
-                        saldo -= amort
-                        tabela.append({
-                            "Mês": i,
-                            "Parcela": parcela,
-                            "Juros": juros,
-                            "Taxa Mensal": taxa_selecionada,
-                            "Taxa Total": taxa,
-                            "Amortização": amort,
-                            "Saldo Devedor": max(saldo, 0)
-                            
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
                         })
 
-                
-                # Adicionar total pago
-                total_pago = 0
-                for item in tabela:
-                    total_pago += item["Parcela"]
-                    item["Total Pago"] = total_pago
+                elif metodo == "MEJS":
+                    parcela = calcular_mejs(valor_base_ajustado, taxa, meses)
+                    amort = valor_base_ajustado / meses
+                    for i in range(1, meses + 1):
+                        juros = valor_base_ajustado * taxa
+                        saldo -= amort
+                        total_pago += parcela
+                        tabela.append({
+                            "Mês": i,
+                            "Parcela": parcela,
+                            "Juros": juros,
+                            "Taxa Mensal": taxa_mensal,
+                            "Taxa Total": taxa,
+                            "Amortização": amort,
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
+                        })
                 
                 # Detalhes do cálculo
                 with st.expander("🧮 Detalhes do Cálculo", expanded=False):
