@@ -521,8 +521,8 @@ def page_cobranca():
                     }
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
-                .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
-                .applymap(lambda x: 'color: #366666;', subset=['Taxa Mensal'])  # Correção aqui
+                .applymap(lambda x: 'color: #eee60b;', subset=['Juros'])
+                .applymap(lambda x: 'color: #e8e110;', subset=['Taxa Mensal'])  # Correção aqui
                 .applymap(lambda x: 'color: #e6de05;', subset=['Taxa Total'])  # Correção aqui
                 .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                 use_container_width=True, hide_index=True, height=400
