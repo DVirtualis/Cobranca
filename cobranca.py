@@ -210,12 +210,20 @@ def page_cobranca():
         "Elo": {"Crédito a Vista": 0.0335, "Débito a Vista": 0.0186,  2: 0.0385, 3: 0.0385, 4: 0.0385, 5: 0.0385, 6: 0.0385, 7: 0.0402, 8: 0.0402, 9: 0.0402, 10: 0.0402, 11: 0.0402, 12: 0.0402,13: 0.0402, 14: 0.0402, 15: 0.0402, 16: 0.0402, 17: 0.0402, 18: 0.0402},
         "Elo Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100}
     }}
+    
+    
+    LOGOS_MAQUINAS = {
+        
+        "Mercado Pago": "images/mercado-pago.svg",
+        "Stone ISAT": "images/stone.png",
+        "Stone Virtualis": "images/stone.png",
+    }
     # Caminhos das imagens das operadoras
     LOGOS_OPERADORAS = {
         "Point": "images/mercado-pago.svg",
         "Link de Pagamento": "images/link_pagamento.png",
-        "Visa": "images/stone.png",
-        "Visa Crédito com Juros": "images/stone.png",
+        "Visa": "images/visa.png",
+        "Visa Crédito com Juros": "images/visa.png",
         "MasterCard": "images/mastercard.png",
         "AmericanExpress": "images/american_express.png",
         "Cabal": "images/cabal.png",
@@ -273,8 +281,8 @@ def page_cobranca():
             # Exibição da logo da máquina
             subcol1, subcol2 = st.columns([1, 2])
             with subcol1:
-                if maquina in LOGOS_OPERADORAS:
-                    st.image(LOGOS_OPERADORAS[maquina], width=70)
+                if maquina in LOGOS_MAQUINAS:
+                    st.image(LOGOS_MAQUINAS[maquina], width=70)
             
             with subcol2:
                 # Taxa de antecipação
