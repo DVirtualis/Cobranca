@@ -643,7 +643,7 @@ def page_cobranca():
                     df['Total Pago'] = df['Parcela'].cumsum()
 
                 # Configurar colunas dinamicamente
-                base_cols = ["Mês", "Taxa Mensal", "Taxa Total", "Parcela", "Juros", "Taxa Antecipação", "Total Pago"]
+                base_cols = ["Mês","Taxa Antecipação", "Taxa Mensal", "Taxa Total", "Parcela", "Juros",  "Total Pago"]
                 
                 if modo_calculo == "🏦 Financiamento":
                     # Inserir colunas extras nas posições específicas
