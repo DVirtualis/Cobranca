@@ -274,7 +274,6 @@ def page_cobranca():
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
-                format_func=lambda x: f"{x} {'🏦' if x == 'Mercado Pago' else '🏢' if x == 'Stone' else '🏛'}",
                 key="maquina_select"
             )
             
