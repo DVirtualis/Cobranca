@@ -255,6 +255,7 @@ def page_cobranca():
                 ">
                     <p style="margin: 0; font-size: 1.1rem; color: {theme_config['theme.textColor']}">
                         <strong>Taxa Mensal Aplicada:</strong> {taxa_selecionada:.2%}
+                        <strong> Taxa Total:</strong> {taxa:.2%}
                     </p>
                 </div>
                 """,
@@ -328,6 +329,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_selecionada,
+                            "Taxa Total": taxa,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -344,6 +346,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_selecionada,
+                            "Taxa Total": taxa,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -362,6 +365,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_selecionada,
+                            "Taxa Total": taxa,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -378,6 +382,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_selecionada,
+                            "Taxa Total": taxa,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                             
@@ -461,6 +466,7 @@ def page_cobranca():
                         "Parcela": valor_parcela,
                         "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
                         "Taxa Mensal": taxa_selecionada,
+                        "Taxa Total": taxa,
                         "Total Pago": valor_parcela * i
                     })
                 
@@ -495,7 +501,7 @@ def page_cobranca():
                     df['Total Pago'] = df['Parcela'].cumsum()
 
                 # Configurar colunas
-                cols = ["Mês", "Parcela", "Juros", "Taxa Mensal","Total Pago"]
+                cols = ["Mês", "Parcela", "Juros", "Taxa Mensal","Taxa Total","Total Pago"]
                 if modo_calculo == "🏦 Financiamento":
                     cols.insert(3, "Amortização")
                     cols.insert(4, "Saldo Devedor")
@@ -506,15 +512,17 @@ def page_cobranca():
                 df[cols].style.format({
                     # Formatação específica para cada coluna
                     'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
+                    'Taxa Total': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
                         col: lambda x: formatar_moeda(x) 
                         for col in cols[1:] 
-                        if col != 'Taxa Mensal'
+                        if col != 'Taxa Mensal' & col != 'Taxa Total'
                     }
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                 .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                 .applymap(lambda x:  f"{x:.2%}" 'color: #366666;', subset=['Taxa Mensal'])
+                .applymap(lambda x:  f"{x:.2%}" 'color: #e6de05;', subset=['Taxa Total'])
                 .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                 use_container_width=True,hide_index=True,
                 height=400
