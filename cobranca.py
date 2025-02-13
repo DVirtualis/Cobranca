@@ -248,14 +248,11 @@ def page_cobranca():
         
         with col2:
             # Exibir Operadora com imagem dentro do SelectBox
-            def format_operadora(op):
-                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25">' if op in LOGOS_OPERADORAS else ""
-                return f"{logo_html} {op}"
+    
             
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
                 options=list(MAQUINAS[maquina].keys()),
-                format_func=format_operadora,
                 key="operadora_select"
             )
 
