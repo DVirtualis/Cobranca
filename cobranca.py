@@ -269,6 +269,11 @@ def page_cobranca():
                 format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
+             # Logo da operadora e bandeira escolhida
+            logo_path_m = LOGOS_OPERADORAS.get(maquina, None)
+            if logo_path_m:
+                st.image(logo_path, width=80)
+            
             # Taxa de antecipação
             taxa_antecipacao = st.number_input(
                 "**Taxa de Antecipação (%)**",
@@ -288,6 +293,12 @@ def page_cobranca():
                 options=list(MAQUINAS[maquina].keys()),
                 key="operadora_select"
             )
+            
+            # Logo da operadora e bandeira escolhida
+            logo_path = LOGOS_OPERADORAS.get(tipo_parcelamento, None)
+            if logo_path:
+                st.image(logo_path, width=80)
+            
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
                 options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
@@ -296,14 +307,7 @@ def page_cobranca():
             )
 
         with col3:
-            # Logo da operadora e bandeira escolhida
-            logo_path_m = LOGOS_OPERADORAS.get(maquina, None)
-            if logo_path_m:
-                st.image(logo_path, width=80)
-            # Logo da operadora e bandeira escolhida
-            logo_path = LOGOS_OPERADORAS.get(tipo_parcelamento, None)
-            if logo_path:
-                st.image(logo_path, width=80)
+           
             
             
 
