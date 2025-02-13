@@ -234,7 +234,6 @@ def page_cobranca():
         key="modo_calculo_radio"
     )
     
-
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
         col1, col2, col3 = st.columns([2, 2, 3])
 
@@ -249,23 +248,20 @@ def page_cobranca():
         with col2:
             # Usando st.radio para exibir operadora com imagem
             operadoras = list(MAQUINAS[maquina].keys())
-            operadora_html = [
-                f'<div>{f"<img src={LOGOS_OPERADORAS[op]} width=25> {op}" if op in LOGOS_OPERADORAS else op}</div>'
-                for op in operadoras
-            ]
             
-            # Exibe o nome e imagem no markdown (opcional)
+            # Criar a exibição da operadora com imagem ao lado
+            operadora_display = []
+            for op in operadoras:
+                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25" style="vertical-align: middle;">' if op in LOGOS_OPERADORAS else ''
+                operadora_display.append(f"{logo_html} {op}")
+
+            # Exibindo o radio com a imagem ao lado da operadora
             tipo_parcelamento = st.radio(
                 "**Operadora**", 
-                options=operadoras, 
+                options=operadora_display,
                 index=0, 
                 key="operadora_select"
             )
-
-            # Exibindo as imagens relacionadas à operadora
-            for op in operadoras:
-                if op == tipo_parcelamento and op in LOGOS_OPERADORAS:
-                    st.markdown(f"<div style='text-align: center;'>{f'<img src={LOGOS_OPERADORAS[op]} width=50>'} <br> {op}</div>", unsafe_allow_html=True)
 
         with col3:
             num_parcelas = st.selectbox(
@@ -274,7 +270,6 @@ def page_cobranca():
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
-
 
 
             # Mostra a taxa selecionada em formato de card
