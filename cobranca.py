@@ -633,43 +633,48 @@ def page_cobranca():
                         """)
 
             # Exibição dos resultados
+            # Exibição dos resultados
             if tabela:
                 df = pd.DataFrame(tabela)
-                df = df.dropna(how='all')# Remove linhas com valores faltantes
+                df = df.dropna(how='all')  # Remove apenas linhas totalmente vazias
                 df['Mês'] = df['Mês'].astype(int)
 
                 if 'Total Pago' not in df.columns:
                     df['Total Pago'] = df['Parcela'].cumsum()
 
-                # Configurar colunas
                 # Configurar colunas dinamicamente
-                base_cols = ["Mês", "Taxa Mensal", "Taxa Total", "Parcela", "Juros", "Total Pago", "Taxa Antecipação"]
-                extra_cols = ["Amortização", "Saldo Devedor"] if modo_calculo == "🏦 Financiamento" else []
-                all_cols = base_cols + extra_cols
-                    
+                base_cols = ["Mês", "Taxa Mensal", "Taxa Total", "Parcela", "Juros", "Taxa Antecipação", "Total Pago"]
                 
-                # Filtrar colunas existentes
+                if modo_calculo == "🏦 Financiamento":
+                    # Inserir colunas extras nas posições específicas
+                    base_cols.insert(5, "Amortização")
+                    base_cols.insert(6, "Saldo Devedor")
 
-                valid_cols = [col for col in all_cols if col in df.columns]
+                # Filtrar apenas colunas existentes no DataFrame
+                valid_cols = [col for col in base_cols if col in df.columns]
+                
+                # Preencher valores NaN restantes
+                df = df[valid_cols].fillna('-')
                 
                 # Formatação condicional
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
-                    df[valid_cols]
-                    .style
-                    .format({
-                        'Taxa Mensal': lambda x: f"{x:.2%}",
-                        'Taxa Total': lambda x: f"{x:.2%}",
-                        **{col: formatar_moeda for col in valid_cols if col not in ['Taxa Mensal', 'Taxa Total']}
-                    }).applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'])
+                    df.style.format({
+                        'Taxa Mensal': lambda x: f"{x:.2%}" if x != '-' else '-',
+                        'Taxa Total': lambda x: f"{x:.2%}" if x != '-' else '-',
+                        **{col: lambda x: formatar_moeda(x) if x != '-' else '-' 
+                        for col in valid_cols 
+                        if col not in ['Taxa Mensal', 'Taxa Total']}
+                    })
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'])
                     .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
-                    .applymap(lambda x: 'color: #eee60b;', subset=['Juros'])
-                    .applymap(lambda x: 'color: #e8e110;', subset=['Taxa Mensal'])  # Correção aqui
-                    .applymap(lambda x: 'color: #e6de05;', subset=['Taxa Total'])  # Correção aqui
-                    .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
+                    .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
+                    .applymap(lambda x: 'color: #3498db;', subset=['Total Pago'])
+                    .applymap(lambda x: 'color: #f39c12;', subset=['Amortização'] if 'Amortização' in valid_cols else [])
+                    .applymap(lambda x: 'color: #8e44ad;', subset=['Saldo Devedor'] if 'Saldo Devedor' in valid_cols else []),
                     use_container_width=True, hide_index=True, height=(35 * len(df) + 35)
                 )
-                
+                            
 
 
                 # Gráfico
