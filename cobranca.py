@@ -247,97 +247,101 @@ def page_cobranca():
         total_juros = pv * taxa_mensal * meses
         return (pv + total_juros) / meses
 
-    # Interface
+   # Interface
     st.title("📈 Calculadora Financeira Integrada")
     st.markdown("---")
-    
+
     modo_calculo = st.radio(
         "**Selecione o Tipo de Cálculo:**", 
         ["🏦 Financiamento", "💳 Parcelamento Simples"],
         horizontal=True,
         key="modo_calculo_radio"
     )
-    
+
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
         col1, col2, col3 = st.columns([2, 2, 3])
 
         with col1:
-            # Exibir opções com imagem dentro do SelectBox
+            # Seleção da Máquina com logo
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
-                format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
+                format_func=lambda x: f"{x} {'🏦' if x == 'Mercado Pago' else '🏢' if x == 'Stone' else '🏛'}",
                 key="maquina_select"
             )
-             # Logo da operadora e bandeira escolhida
-            logo_path_m = LOGOS_OPERADORAS.get(maquina, None)
-            if logo_path_m:
-                st.image(logo_path, width=80)
             
-            # Taxa de antecipação
-            taxa_antecipacao = st.number_input(
-                "**Taxa de Antecipação (%)**",
-                min_value=0.0,
-                max_value=100.0,
-                value=2.0,
-                step=0.1,
-                format="%.2f"
-            ) / 100  # Convertendo para decimal
-        
+            # Exibição da logo da máquina
+            subcol1, subcol2 = st.columns([1, 2])
+            with subcol1:
+                if maquina in LOGOS_OPERADORAS:
+                    st.image(LOGOS_OPERADORAS[maquina], width=70)
+            
+            with subcol2:
+                # Taxa de antecipação
+                taxa_antecipacao = st.number_input(
+                    "**Taxa de Antec. (%)**",
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=2.0,
+                    step=0.1,
+                    format="%.2f"
+                ) / 100
+
         with col2:
-            # Exibir Operadora com imagem dentro do SelectBox
-    
-            
+            # Seleção da Operadora com logo
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
                 options=list(MAQUINAS[maquina].keys()),
                 key="operadora_select"
             )
             
-            # Logo da operadora e bandeira escolhida
-            logo_path = LOGOS_OPERADORAS.get(tipo_parcelamento, None)
-            if logo_path:
-                st.image(logo_path, width=80)
+            # Exibição da logo da operadora
+            subcol1, subcol2 = st.columns([1, 2])
+            with subcol1:
+                if tipo_parcelamento in LOGOS_OPERADORAS:
+                    st.image(LOGOS_OPERADORAS[tipo_parcelamento], width=70)
             
-            num_parcelas = st.selectbox(
-                "**Forma de Pagamento**",
-                options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
-                format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
-                key="forma_pagamento"
-            )
+            with subcol2:
+                num_parcelas = st.selectbox(
+                    "**Forma Pagamento**",
+                    options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
+                    format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
+                    key="forma_pagamento"
+                )
 
         with col3:
-           
-            
-            
-
-            # Mostra a taxa selecionada em formato de card
+            # Card de Taxas
             taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
-            taxa_selecionada = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
-            if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
+            taxa_selecionada = taxa
+            
+            if maquina == "Mercado Pago" and isinstance(num_parcelas, int):
+                taxa_selecionada = (1 + taxa) ** (1/num_parcelas) - 1
 
-                 
-
-            st.markdown(
-                f"""
-                <div style="
-                    background-color: {theme_config['theme.secondaryBackgroundColor']};
-                    padding: 0.75rem;
-                    border-radius: 10px;
-                    border: 1px solid {theme_config['theme.primaryColor']};
-                    margin-top: 1rem;
-                    text-align: center;
-                ">
-                    <p style="margin: 0; font-size: 1.1rem; color: {theme_config['theme.textColor']}">
-                        <strong>Taxa Mensal Aplicada:</strong> {taxa_selecionada:.2%}
-                        <strong> Taxa Total:</strong> {taxa:.2%}
-                    </p>
+            st.markdown(f"""
+            <div style="
+                background-color: {theme_config['theme.secondaryBackgroundColor']};
+                padding: 1rem;
+                border-radius: 10px;
+                border: 2px solid {theme_config['theme.primaryColor']};
+                margin-top: 1.5rem;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            ">
+                <div style="margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.2rem; color: {theme_config['theme.primaryColor']}">💰 Taxas Aplicadas</span>
                 </div>
-                """,
-                unsafe_allow_html=True
-            )
-    
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <div>
+                        <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Mensal:</span><br>
+                        <span style="color: #2ecc71">{taxa_selecionada:.2%}</span>
+                    </div>
+                    <div>
+                        <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Total:</span><br>
+                        <span style="color: #e74c3c">{taxa:.2%}</span>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     # Inicialização segura das variáveis
     valor = 0.0
     desconto = 0.0
