@@ -319,7 +319,7 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa,
+                            "Taxa Mensal": taxa_selecionada,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -335,7 +335,7 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa,
+                            "Taxa Mensal": taxa_selecionada,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -353,7 +353,7 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa,
+                            "Taxa Mensal": taxa_selecionada,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                         })
@@ -369,7 +369,7 @@ def page_cobranca():
                             "Mês": i,
                             "Parcela": parcela,
                             "Juros": juros,
-                            "Taxa Mensal": taxa,
+                            "Taxa Mensal": taxa_selecionada,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0)
                             
@@ -452,7 +452,7 @@ def page_cobranca():
                         "Mês": i,
                         "Parcela": valor_parcela,
                         "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
-                        "Taxa Mensal": taxa,
+                        "Taxa Mensal": taxa_selecionada,
                         "Total Pago": valor_parcela * i
                     })
                 
