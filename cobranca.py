@@ -641,10 +641,11 @@ def page_cobranca():
                     df['Total Pago'] = df['Parcela'].cumsum()
 
                 # Configurar colunas
-                cols = ["Mês", "Taxa Mensal","Taxa Total","Parcela", "Juros", "Total Pago"]
+                cols = ["Mês", "Taxa Mensal","Taxa Total","Parcela", "Juros", "Total Pago", "Taxa Antecipação"]
                 if modo_calculo == "🏦 Financiamento":
                     cols.insert(5, "Amortização")
                     cols.insert(6, "Saldo Devedor")
+                    
                     
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
@@ -658,6 +659,7 @@ def page_cobranca():
                         if col not in ['Taxa Mensal', 'Taxa Total']
                     }
                 })
+                .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'])
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                 .applymap(lambda x: 'color: #eee60b;', subset=['Juros'])
                 .applymap(lambda x: 'color: #e8e110;', subset=['Taxa Mensal'])  # Correção aqui
