@@ -238,26 +238,27 @@ def page_cobranca():
         col1, col2, col3 = st.columns([2, 2, 3])
 
         with col1:
-            # Seleção de Máquina
+            # Exibir opções com imagem dentro do SelectBox
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
+                format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
         
         with col2:
-            # Usando botões customizados para operadora
-            operadoras = list(MAQUINAS[maquina].keys())
-            operadora_buttons = [f'<button style="display:block; padding:10px; text-align:center; background-color:#f1f1f1; margin-bottom:5px; border-radius:5px">{f"<img src={LOGOS_OPERADORAS[op]} width=25> {op}"}</button>' for op in operadoras]
+            # Exibir Operadora com imagem dentro do SelectBox
+            def format_operadora(op):
+                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25">' if op in LOGOS_OPERADORAS else ""
+                return f"{logo_html} {op}"
             
-            # Renderizar as opções de operadora como botão
-            tipo_parcelamento = st.radio(
+            tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
-                options=operadoras,
-                index=0, 
+                options=list(MAQUINAS[maquina].keys()),
+                format_func=format_operadora,
                 key="operadora_select"
             )
-        
+
         with col3:
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
