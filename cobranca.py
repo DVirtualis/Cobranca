@@ -237,6 +237,7 @@ def page_cobranca():
                 key="forma_pagamento"
             )
             # Mostra a taxa selecionada em formato de card
+            taxa = TAXAS[tipo_parcelamento][num_parcelas]
             taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
                 taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
