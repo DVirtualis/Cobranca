@@ -316,12 +316,28 @@ def page_cobranca():
                 )
 
         with col3:
-            # Card de Taxas
-            taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
-            taxa_selecionada = taxa
+            # Cálculo das taxas conforme tipo de máquina
+            taxa_bruta = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+            is_parcelado = isinstance(num_parcelas, int)
             
-            if maquina == "Mercado Pago" and isinstance(num_parcelas, int):
-                taxa_selecionada = (1 + taxa) ** (1/num_parcelas) - 1
+            if maquina == "Mercado Pago":
+                if is_parcelado:
+                    # Taxa bruta = total, calcular mensal
+                    taxa_total = taxa_bruta
+                    taxa_mensal = (1 + taxa_bruta) ** (1/num_parcelas) - 1
+                else:
+                    # À vista: mesma taxa para ambos
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
+            else:
+                if is_parcelado:
+                    # Taxa bruta = mensal, calcular total
+                    taxa_mensal = taxa_bruta
+                    taxa_total = (1 + taxa_bruta) ** num_parcelas - 1
+                else:
+                    # À vista: mesma taxa para ambos
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
 
             st.markdown(f"""
             <div style="
@@ -339,11 +355,11 @@ def page_cobranca():
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                     <div>
                         <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Mensal:</span><br>
-                        <span style="color: #2ecc71">{taxa_selecionada:.2%}</span>
+                        <span style="color: #2ecc71">{taxa_mensal:.2%}</span>
                     </div>
                     <div>
                         <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Total:</span><br>
-                        <span style="color: #e74c3c">{taxa:.2%}</span>
+                        <span style="color: #e74c3c">{taxa_total:.2%}</span>
                     </div>
                 </div>
             </div>
@@ -405,23 +421,32 @@ def page_cobranca():
     if calcular_btn:
         try:
             tabela = []
-
-            # Aplicação do desconto antes de qualquer cálculo
             valor_base = valor - desconto 
-
-            # Aplicação da taxa de antecipação (caso aplicável)
             taxa_antecipacao_valor = valor_base * taxa_antecipacao
             valor_base_ajustado = valor_base + taxa_antecipacao_valor
 
-            # Obtendo a taxa da operadora
-            taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+            # Obtém a taxa bruta da estrutura MAQUINAS
+            taxa_bruta = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
 
             # Cálculo da taxa mensal para Mercado Pago
-            if maquina == "Mercado Pago" and isinstance(num_parcelas, int):
-                taxa_total = taxa
-                taxa_mensal = (1 + taxa_total) ** (1 / num_parcelas) - 1
+            if maquina == "Mercado Pago":
+                if isinstance(num_parcelas, int):
+                    # Taxa bruta = taxa total para parcelado
+                    taxa_total = taxa_bruta
+                    taxa_mensal = (1 + taxa_total) ** (1/num_parcelas) - 1
+                else:
+                    # À vista: taxa única
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
             else:
-                taxa_mensal = taxa
+                if isinstance(num_parcelas, int):
+                    # Taxa bruta = taxa mensal para outras máquinas
+                    taxa_mensal = taxa_bruta
+                    taxa_total = (1 + taxa_mensal) ** num_parcelas - 1
+                else:
+                    # À vista: taxa única
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
 
             # Cálculo de financiamento
             total_pago = 0
@@ -429,9 +454,9 @@ def page_cobranca():
 
             if modo_calculo == "🏦 Financiamento":
                 if metodo == "Price":
-                    parcela = calcular_price(valor_base_ajustado, taxa, meses)
+                    parcela = calcular_price(valor_base_ajustado, taxa_bruta, meses)
                     for i in range(1, meses + 1):
-                        juros = saldo * taxa
+                        juros = saldo * taxa_bruta
                         amort = parcela - juros
                         saldo -= amort
                         total_pago += parcela
@@ -440,7 +465,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_mensal,
-                            "Taxa Total": taxa,
+                            "Taxa Total": taxa_total,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0),
                             "Taxa Antecipação": taxa_antecipacao_valor,
@@ -449,10 +474,10 @@ def page_cobranca():
                         })
 
                 elif metodo == "SAC":
-                    parcelas = calcular_sac(valor_base_ajustado, taxa, meses)
+                    parcelas = calcular_sac(valor_base_ajustado, taxa_bruta, meses)
                     amort = valor_base_ajustado / meses
                     for i, parcela in enumerate(parcelas, 1):
-                        juros = saldo * taxa
+                        juros = saldo * taxa_bruta
                         saldo -= amort
                         total_pago += parcela
                         tabela.append({
@@ -460,7 +485,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_mensal,
-                            "Taxa Total": taxa,
+                            "Taxa Total": taxa_total,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0),
                             "Taxa Antecipação": taxa_antecipacao_valor,
@@ -469,11 +494,11 @@ def page_cobranca():
                         })
 
                 elif metodo == "SACRE":
-                    parcelas = calcular_sacre(valor_base_ajustado, taxa, meses)
+                    parcelas = calcular_sacre(valor_base_ajustado, taxa_bruta, meses)
                     amort_base = valor_base_ajustado / meses
-                    fator = 1 + taxa
+                    fator = 1 + taxa_bruta
                     for i, parcela in enumerate(parcelas, 1):
-                        juros = saldo * taxa
+                        juros = saldo * taxa_bruta
                         amort = amort_base * (fator ** i)
                         saldo -= amort
                         total_pago += parcela
@@ -482,7 +507,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_mensal,
-                            "Taxa Total": taxa,
+                            "Taxa Total": taxa_total,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0),
                             "Taxa Antecipação": taxa_antecipacao_valor,
@@ -491,10 +516,10 @@ def page_cobranca():
                         })
 
                 elif metodo == "MEJS":
-                    parcela = calcular_mejs(valor_base_ajustado, taxa, meses)
+                    parcela = calcular_mejs(valor_base_ajustado, taxa_bruta, meses)
                     amort = valor_base_ajustado / meses
                     for i in range(1, meses + 1):
-                        juros = valor_base_ajustado * taxa
+                        juros = valor_base_ajustado * taxa_bruta
                         saldo -= amort
                         total_pago += parcela
                         tabela.append({
@@ -502,7 +527,7 @@ def page_cobranca():
                             "Parcela": parcela,
                             "Juros": juros,
                             "Taxa Mensal": taxa_mensal,
-                            "Taxa Total": taxa,
+                            "Taxa Total": taxa_total,
                             "Amortização": amort,
                             "Saldo Devedor": max(saldo, 0),
                             "Taxa Antecipação": taxa_antecipacao_valor,
@@ -519,13 +544,13 @@ def page_cobranca():
                         
                         **Valores Aplicados:**  
                         - PV (Valor Presente) = {formatar_moeda(valor_base).replace('$', '\\$')}  
-                        - i (Taxa Mensal) = {taxa:.4%}  
+                        - i (Taxa Mensal) = {taxa_mensal:.4%}  
                         - n (Períodos) = {meses}  
                         
                         **Cálculo:**  
                         ```python
-                        P = ({formatar_moeda(valor_base).replace('$', '\\$')} * {taxa:.4%}) 
-                        / (1 - (1 + {taxa:.4%})^-{meses})
+                        P = ({formatar_moeda(valor_base).replace('$', '\\$')} * {taxa_bruta:.4%}) 
+                        / (1 - (1 + {taxa_bruta:.4%})^-{meses})
                         = {formatar_moeda(parcela).replace('$', '\\$')}
                         ```
                         """)
@@ -549,13 +574,13 @@ def page_cobranca():
                         `Amortização = (PV/n) * (1 + i)^período`  
                         
                         **Componentes:**  
-                        - Fator Mensal = {1 + taxa:.5f}  
+                        - Fator Mensal = {1 + taxa_bruta:.5f}  
                         - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')} 
                        
                         """)
                     
                     elif metodo == "MEJS":
-                        total_juros = valor_base * taxa * meses
+                        total_juros = valor_base * taxa_bruta * meses
                         st.markdown(f"""
                         **Fórmula MEJS:**  
                         `Total Juros = PV * i * n`  
@@ -569,10 +594,10 @@ def page_cobranca():
 
             else:  # Parcelamento Simples
                 if isinstance(num_parcelas, int):
-                    total_juros = valor * taxa * meses
+                    total_juros = valor * taxa_bruta * meses
                     valor_parcela = (valor + total_juros) / meses
                 else:
-                    total_juros = valor * taxa
+                    total_juros = valor * taxa_bruta
                     valor_parcela = valor + total_juros
                 
                 for i in range(1, meses + 1):
@@ -580,8 +605,8 @@ def page_cobranca():
                         "Mês": i,
                         "Parcela": valor_parcela,
                         "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
-                        "Taxa Mensal": taxa_selecionada,
-                        "Taxa Total": taxa,
+                        "Taxa Mensal": taxa_mensal,
+                        "Taxa Total": taxa_total,
                         "Total Pago": valor_parcela * i
                     })
                 
@@ -595,7 +620,7 @@ def page_cobranca():
                         `Valor Parcela = (Valor + Total Juros) / Parcelas`  
                         
                         **Aplicação:**  
-                        1. Total Juros = {formatar_moeda(valor).replace('$', '\\$')} * {taxa:.4%} * {meses} = {formatar_moeda(total_juros).replace('$', '\\$')}  
+                        1. Total Juros = {formatar_moeda(valor).replace('$', '\\$')} * {taxa_bruta:.4%} * {meses} = {formatar_moeda(total_juros).replace('$', '\\$')}  
                         2. Valor Parcela = ({formatar_moeda(valor).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
                         """)
                     else:
@@ -604,7 +629,7 @@ def page_cobranca():
                         `Valor Total = Valor * (1 + Taxa)`  
                         
                         **Cálculo:**  
-                        {formatar_moeda(valor).replace('$', '\\$')} * (1 + {taxa:.4%}) = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
+                        {formatar_moeda(valor).replace('$', '\\$')} * (1 + {taxa_bruta:.4%}) = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
                         """)
 
             # Exibição dos resultados
