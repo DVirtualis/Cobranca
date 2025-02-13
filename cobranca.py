@@ -506,6 +506,7 @@ def page_cobranca():
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                 .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
+                .applymap(lambda x:  f"{x:.2%}" 'color: #366666;', subset=['Taxa Mensal'])
                 .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
                 use_container_width=True,
                 height=400
