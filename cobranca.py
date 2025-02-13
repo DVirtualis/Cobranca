@@ -312,8 +312,9 @@ def page_cobranca():
         try:
             tabela = []
             taxa = TAXAS[tipo_parcelamento][num_parcelas]
+            taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa = (1 + taxa) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
+                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1 
  
                 
             valor_base = valor - desconto 
