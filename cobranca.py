@@ -301,7 +301,16 @@ def page_cobranca():
                                       value=10000.0, 
                                       step=100.0,
                                       key="valor_total")
+                desconto = st.number_input("**Desconto (R$)**", 
+                                         min_value=0.0, 
+                                         max_value=valor if valor > 0 else 0.0, 
+                                         value=0.0, 
+                                         step=100.0,
+                                         key="desconto")
             with col2:
+                percentual = (desconto / valor * 100) if valor > 0 else 0.0
+                st.metric("**Percentual de Desconto**", f"{percentual:.2f}%")
+                st.metric("**Valor Líquido**", formatar_moeda(valor - desconto))
                 meses = num_parcelas if isinstance(num_parcelas, int) else 1
                 st.metric("**Parcelas**", meses if isinstance(num_parcelas, int) else "À Vista")
 
