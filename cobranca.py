@@ -298,7 +298,7 @@ def page_cobranca():
             # Seleção da Operadora com logo
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
-                options=list(MAQUINAS[maquina].keys()),
+                options=list(MAQUINAS[tipo_parcelamento].keys()),
                 key="operadora_select"
             )
             
