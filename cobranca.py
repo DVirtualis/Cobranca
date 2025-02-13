@@ -195,7 +195,8 @@ def page_cobranca():
         "Stone ISAT":{
         " Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
         " Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205},
-        }, "Stone Virtualis":{
+        }, 
+        "Stone Virtualis":{
         "Visa": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
         "Visa Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
         "MasterCard": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
@@ -296,13 +297,15 @@ def page_cobranca():
 
         with col3:
             # Logo da operadora e bandeira escolhida
+            logo_path_m = LOGOS_OPERADORAS.get(maquina, None)
+            if logo_path_m:
+                st.image(logo_path, width=80)
+            # Logo da operadora e bandeira escolhida
             logo_path = LOGOS_OPERADORAS.get(tipo_parcelamento, None)
             if logo_path:
                 st.image(logo_path, width=80)
             
-            # Nome da bandeira e tipo de parcelamento
-            st.markdown(f"**Bandeira Escolhida:** {tipo_parcelamento}")
-            st.markdown(f"**Forma de Pagamento:** {num_parcelas}x")
+            
 
             # Mostra a taxa selecionada em formato de card
             taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
