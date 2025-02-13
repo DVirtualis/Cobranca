@@ -512,23 +512,22 @@ def page_cobranca():
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
                 df[cols].style.format({
-                    # Formatação específica para cada coluna
-                    'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
-                    'Taxa Total': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
-                    **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
+                    'Taxa Mensal': lambda x: f"{x:.2%}",  
+                    'Taxa Total': lambda x: f"{x:.2%}",
+                    **{  # Formata as demais colunas como moeda
                         col: lambda x: formatar_moeda(x) 
                         for col in cols[1:] 
-                        if col != 'Taxa Mensal' and col != 'Taxa Total'
+                        if col not in ['Taxa Mensal', 'Taxa Total']
                     }
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
                 .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
-                .applymap(lambda x:  f"{x:.2%}" 'color: #366666;', subset=['Taxa Mensal'])
-                .applymap(lambda x:  f"{x:.2%}" 'color: #e6de05;', subset=['Taxa Total'])
+                .applymap(lambda x: 'color: #366666;', subset=['Taxa Mensal'])  # Correção aqui
+                .applymap(lambda x: 'color: #e6de05;', subset=['Taxa Total'])  # Correção aqui
                 .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
-                use_container_width=True,hide_index=True,
-                height=400
+                use_container_width=True, hide_index=True, height=400
             )
+
 
                 # Gráfico
                 fig = px.line(
