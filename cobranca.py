@@ -668,11 +668,14 @@ def page_cobranca():
                         if col not in ['Mês','Taxa Mensal', 'Taxa Total']}
                     })
                     .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'])
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Mensal'])
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Total'])
                     .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
-                    .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
+                    .applymap(lambda x: 'color: #2ecc71;', subset=['Juros'])
+                    
                     .applymap(lambda x: 'color: #3498db;', subset=['Total Pago'])
                     .applymap(lambda x: 'color: #f39c12;', subset=['Amortização'] if 'Amortização' in valid_cols else [])
-                    .applymap(lambda x: 'color: #8e44ad;', subset=['Saldo Devedor'] if 'Saldo Devedor' in valid_cols else []),
+                    .applymap(lambda x: 'color: #f39c12;', subset=['Saldo Devedor'] if 'Saldo Devedor' in valid_cols else []),
                     use_container_width=True, hide_index=True, height=(35 * len(df) + 35)
                 )
                             
