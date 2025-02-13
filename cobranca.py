@@ -200,8 +200,8 @@ def page_cobranca():
     LOGOS_OPERADORAS = {
         "Point": "images/mercado-pago.svg",
         "Link de Pagamento": "images/link_pagamento.png",
-        "Stone ISAT - Visa": "images/visa.png",
-        "Stone ISAT - Visa Crédito com Juros": "images/visa_credito.png"
+        "Stone ISAT - Visa": "images/stone.png",
+        "Stone ISAT - Visa Crédito com Juros": "images/stone.png"
     }
 
 
@@ -235,26 +235,30 @@ def page_cobranca():
     )
     
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
-        col1, col2,col3 = st.columns([2,2, 3])
+        col1, col2, col3 = st.columns([2, 2, 3])
+
         with col1:
-            # Seleção de máquina
+            # Exibir opções com imagem dentro do SelectBox
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
+                format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
-            if maquina in LOGOS_OPERADORAS:
-                st.image(LOGOS_OPERADORAS[maquina], width=80)
         
         with col2:
+            # Exibir Operadora com imagem dentro do SelectBox
+            def format_operadora(op):
+                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25">' if op in LOGOS_OPERADORAS else ""
+                return f"{logo_html} {op}"
+            
             tipo_parcelamento = st.selectbox(
                 "**Operadora**", 
                 options=list(MAQUINAS[maquina].keys()),
+                format_func=format_operadora,
                 key="operadora_select"
             )
-            # Exibir a imagem correspondente
-            if tipo_parcelamento in LOGOS_OPERADORAS:
-                st.image(LOGOS_OPERADORAS[tipo_parcelamento], width=100)
+
         with col3:
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
@@ -262,6 +266,7 @@ def page_cobranca():
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
+
             # Mostra a taxa selecionada em formato de card
             taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
             taxa_selecionada = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
