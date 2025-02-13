@@ -239,7 +239,8 @@ def page_cobranca():
             # Mostra a taxa selecionada em formato de card
             taxa_selecionada = TAXAS[tipo_parcelamento][num_parcelas]
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa_selecionada = taxa_selecionada / num_parcelas  # Taxa total → mensal
+                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
+
                 
 
             st.markdown(
@@ -310,7 +311,8 @@ def page_cobranca():
             tabela = []
             taxa = TAXAS[tipo_parcelamento][num_parcelas]
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa = taxa / num_parcelas  
+                taxa = (1 + taxa) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
+ 
                 
             valor_base = valor - desconto 
             if modo_calculo == "🏦 Financiamento":
