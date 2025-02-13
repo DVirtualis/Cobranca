@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from streamlit_image_select import image_select
 
 # Configurações de tema e estilo (mantenha igual às suas páginas originais)
 
@@ -226,59 +227,66 @@ def page_cobranca():
     # Interface
     st.title("📈 Calculadora Financeira Integrada")
     st.markdown("---")
-    
+
+    # Seleção do tipo de cálculo
     modo_calculo = st.radio(
         "**Selecione o Tipo de Cálculo:**", 
         ["🏦 Financiamento", "💳 Parcelamento Simples"],
         horizontal=True,
         key="modo_calculo_radio"
     )
-    
+
     with st.expander("⚙️ Configurações da Taxa", expanded=True):
         col1, col2, col3 = st.columns([2, 2, 3])
 
         with col1:
-            # Seleção de Máquina
+            # Seleção da Máquina com imagem no formato de texto
             maquina = st.selectbox(
                 "**Máquina**",
                 options=list(MAQUINAS.keys()),
+                format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
-        
+
         with col2:
             # Usando st.radio para exibir operadora com imagem
             operadoras = list(MAQUINAS[maquina].keys())
             
-            # Criar a exibição da operadora com imagem ao lado
-            operadora_display = []
-            for op in operadoras:
-                logo_html = f'<img src="{LOGOS_OPERADORAS[op]}" width="25" style="vertical-align: middle;">' if op in LOGOS_OPERADORAS else ''
-                operadora_display.append(f"{logo_html} {op}")
-
-            # Exibindo o radio com a imagem ao lado da operadora
-            tipo_parcelamento = st.radio(
+            # Criando a lista de imagens e nomes de operadoras
+            images = [LOGOS_OPERADORAS[op] for op in operadoras if op in LOGOS_OPERADORAS]
+            labels = [op for op in operadoras]
+            
+            # Usando image_select para mostrar as imagens e textos
+            operadora_selecionada = image_select(
                 "**Operadora**", 
-                options=operadora_display,
-                index=0, 
-                key="operadora_select"
+                images, 
+                labels
             )
 
         with col3:
+            
+             # Seleção do tipo de parcelamento, dependendo da operadora selecionada
+            tipos_parcelamento = list(MAQUINAS[maquina][operadora_selecionada].keys())
+            tipo_parcelamento = st.selectbox(
+            "**Tipo de Parcelamento**",
+            options=tipos_parcelamento,
+            key="tipo_parcelamento"
+        )
+            # Seleção da forma de pagamento
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
-                options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
+                options=list(MAQUINAS[maquina][operadora_selecionada].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
 
+            # Cálculo da taxa de pagamento
+            taxa = MAQUINAS[maquina][operadora_selecionada][num_parcelas]
+            taxa_selecionada = MAQUINAS[maquina][operadora_selecionada][num_parcelas]
+            if operadora_selecionada in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
+                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Cálculo da taxa mensal equivalente
 
-            # Mostra a taxa selecionada em formato de card
-            taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
-            taxa_selecionada = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
-            if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
-                taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
-
-                 # Taxa de antecipação
+            # Exibição da taxa de antecipação
             taxa_antecipacao = st.number_input(
                 "**Taxa de Antecipação (%)**",
                 min_value=0.0,
@@ -288,6 +296,7 @@ def page_cobranca():
                 format="%.2f"
             ) / 100  # Convertendo para decimal
 
+            # Exibindo a taxa mensal e a taxa total em um card estilizado
             st.markdown(
                 f"""
                 <div style="
