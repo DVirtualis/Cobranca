@@ -495,7 +495,7 @@ def page_cobranca():
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
-                df[cols].style.hide(axis='index').format({
+                df[cols].hide(axis='index').style.format({
                     # Formatação específica para cada coluna
                     'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
