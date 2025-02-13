@@ -517,7 +517,7 @@ def page_cobranca():
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
                         col: lambda x: formatar_moeda(x) 
                         for col in cols[1:] 
-                        if col != 'Taxa Mensal' or col != 'Taxa Total'
+                        if col != 'Taxa Mensal' and col != 'Taxa Total'
                     }
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
