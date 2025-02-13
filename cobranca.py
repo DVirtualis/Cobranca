@@ -497,11 +497,11 @@ def page_cobranca():
                 st.dataframe(
                 df[cols].style.hide(axis='index').format({
                     # Formatação específica para cada coluna
-                    
+                    'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
                         col: lambda x: formatar_moeda(x) 
                         for col in cols[1:] 
-                        
+                        if col != 'Taxa Mensal'
                     }
                 })
                 .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'])
