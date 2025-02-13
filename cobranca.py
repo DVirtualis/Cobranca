@@ -221,7 +221,7 @@ def page_cobranca():
     # Caminhos das imagens das operadoras
     LOGOS_OPERADORAS = {
         "Point": "images/mercado-pago.svg",
-        "Link de Pagamento": "images/mercarod-pago.svg",
+        "Link de Pagamento": "images/mercado-pago.svg",
         "Visa": "images/visa.png",
         "Visa Crédito com Juros": "images/visa.png",
         "MasterCard": "images/mastercard.png",
