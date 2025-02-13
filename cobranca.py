@@ -503,10 +503,10 @@ def page_cobranca():
                     df['Total Pago'] = df['Parcela'].cumsum()
 
                 # Configurar colunas
-                cols = ["Mês", "Parcela", "Juros", "Taxa Mensal","Taxa Total","Total Pago"]
+                cols = ["Mês", "Taxa Mensal","Taxa Total","Parcela", "Juros", "Total Pago"]
                 if modo_calculo == "🏦 Financiamento":
-                    cols.insert(3, "Amortização")
-                    cols.insert(4, "Saldo Devedor")
+                    cols.insert(5, "Amortização")
+                    cols.insert(6, "Saldo Devedor")
                     
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
