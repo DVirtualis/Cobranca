@@ -635,6 +635,7 @@ def page_cobranca():
             # Exibição dos resultados
             if tabela:
                 df = pd.DataFrame(tabela)
+                df = df.dropna(how='all')# Remove linhas com valores faltantes
                 df['Mês'] = df['Mês'].astype(int)
 
                 if 'Total Pago' not in df.columns:
