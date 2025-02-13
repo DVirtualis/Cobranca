@@ -495,7 +495,7 @@ def page_cobranca():
 
                 st.markdown("### 📑 Detalhamento do Parcelamento")
                 st.dataframe(
-                df[cols].hide(axis='index').style.format({
+                df[cols].style.format({
                     # Formatação específica para cada coluna
                     'Taxa Mensal': lambda x: f"{x:.2%}",  # Percentual (ex: 5.00%)
                     **{  # Formata as demais colunas como moeda (exceto Taxa Mensal)
@@ -508,7 +508,7 @@ def page_cobranca():
                 .applymap(lambda x: 'color: #e74c3c;', subset=['Juros'])
                 .applymap(lambda x:  f"{x:.2%}" 'color: #366666;', subset=['Taxa Mensal'])
                 .applymap(lambda x: 'color: #3498db;', subset=['Total Pago']),
-                use_container_width=True,
+                use_container_width=True,hide_index=True,
                 height=400
             )
 
