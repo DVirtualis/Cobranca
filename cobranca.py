@@ -245,6 +245,15 @@ def page_cobranca():
                 format_func=lambda x: f"{x}  🏦" if x in LOGOS_OPERADORAS else x,
                 key="maquina_select"
             )
+            # Taxa de antecipação
+            taxa_antecipacao = st.number_input(
+                "**Taxa de Antecipação (%)**",
+                min_value=0.0,
+                max_value=100.0,
+                value=2.0,
+                step=0.1,
+                format="%.2f"
+            ) / 100  # Convertendo para decimal
         
         with col2:
             # Exibir Operadora com imagem dentro do SelectBox
@@ -270,15 +279,7 @@ def page_cobranca():
             if tipo_parcelamento in ["Point", "Link de Pagamento"] and isinstance(num_parcelas, int):
                 taxa_selecionada = (1 + taxa_selecionada) ** (1 / num_parcelas) - 1  # Correto para taxa mensal equivalente
 
-                 # Taxa de antecipação
-            taxa_antecipacao = st.number_input(
-                "**Taxa de Antecipação (%)**",
-                min_value=0.0,
-                max_value=100.0,
-                value=2.0,
-                step=0.1,
-                format="%.2f"
-            ) / 100  # Convertendo para decimal
+                 
 
             st.markdown(
                 f"""
