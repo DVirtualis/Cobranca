@@ -192,16 +192,39 @@ def page_cobranca():
         "Point": {2: 0.0442, 3: 0.0532, 4: 0.0622, 5: 0.0712, 6: 0.0802, 7: 0.0892, 8: 0.0982, 9: 0.1072, 10: 0.1162, 11: 0.1252, 12: 0.1342},
         "Link de Pagamento": {"Débito": 0.015, "Crédito a Vista": 0.0310, "Pix":0.0049, 2: 0.0439, 3: 0.0514, 4: 0.0589, 5: 0.0664, 6: 0.0739, 7: 0.0818, 8: 0.0893, 9: 0.0968, 10: 0.1043, 11: 0.1118, 12: 0.1193},
         },
-        "Stone":{
-        "Stone ISAT - Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
-        "Stone ISAT - Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205}
+        "Stone ISAT":{
+        " Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
+        " Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205},
+        }, "Stone Virtualis":{
+        "Visa": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
+        "Visa Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+        "MasterCard": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
+        "AmericanExpress": {"Crédito a Vista": 0.0310,  2: 0.0356, 3: 0.0356, 4: 0.0356, 5: 0.0356, 6: 0.0356, 7: 0.0385, 8: 0.0385, 9: 0.0385, 10: 0.0385, 11: 0.0385, 12: 0.0385},
+        "Cabal": {"Crédito a Vista": 0.0500, "Débito a Vista": 0.0500, 2: 0.0525, 3: 0.0525, 4: 0.0525, 5: 0.0525, 6: 0.0525, 7: 0.0550, 8: 0.0550, 9: 0.0550, 10: 0.0550, 11: 0.0550, 12: 0.0550},
+        "Cabal Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+
+        "Hipercard":{"Crédito a Vista": 0.0280,  2: 0.0383, 3: 0.0383, 4: 0.0383, 5: 0.0383, 6: 0.0383, 7: 0.0430, 8: 0.0430, 9: 0.0430, 10: 0.0430, 11: 0.0430, 12: 0.0430},
+        "Hipercard Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+        "UnionPay": {"Crédito a Vista": 0.0400, "Débito a Vista": 0.0400,  2: 0.0400, 3: 0.0400, 4: 0.0400, 5: 0.0400, 6: 0.0400, 7: 0.0400, 8: 0.0400, 9: 0.0400, 10: 0.0400, 11: 0.0400, 12: 0.0400},
+        "Elo": {"Crédito a Vista": 0.0335, "Débito a Vista": 0.0186,  2: 0.0385, 3: 0.0385, 4: 0.0385, 5: 0.0385, 6: 0.0385, 7: 0.0402, 8: 0.0402, 9: 0.0402, 10: 0.0402, 11: 0.0402, 12: 0.0402,13: 0.0402, 14: 0.0402, 15: 0.0402, 16: 0.0402, 17: 0.0402, 18: 0.0402},
+        "Elo Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100}
     }}
     # Caminhos das imagens das operadoras
     LOGOS_OPERADORAS = {
         "Point": "images/mercado-pago.svg",
         "Link de Pagamento": "images/link_pagamento.png",
-        "Stone ISAT - Visa": "images/stone.png",
-        "Stone ISAT - Visa Crédito com Juros": "images/stone.png"
+        "Visa": "images/stone.png",
+        "Visa Crédito com Juros": "images/stone.png",
+        "MasterCard": "images/mastercard.png",
+        "AmericanExpress": "images/american_express.png",
+        "Cabal": "images/cabal.png",
+        "Cabal Crédito com Juros": "images/cabal.png",
+        "Hipercard": "images/hipercard.png",
+        "Hipercard Crédito com Juros": "images/hipercard.png",
+        "UnionPay": "images/unionpay.png",
+        "Elo": "images/elo.svg",
+        "Elo Crédito com Juros": "images/elo.svg"
+
     }
 
 
@@ -264,14 +287,22 @@ def page_cobranca():
                 options=list(MAQUINAS[maquina].keys()),
                 key="operadora_select"
             )
-
-        with col3:
             num_parcelas = st.selectbox(
                 "**Forma de Pagamento**",
                 options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
                 format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
                 key="forma_pagamento"
             )
+
+        with col3:
+            # Logo da operadora e bandeira escolhida
+            logo_path = LOGOS_OPERADORAS.get(tipo_parcelamento, None)
+            if logo_path:
+                st.image(logo_path, width=80)
+            
+            # Nome da bandeira e tipo de parcelamento
+            st.markdown(f"**Bandeira Escolhida:** {tipo_parcelamento}")
+            st.markdown(f"**Forma de Pagamento:** {num_parcelas}x")
 
             # Mostra a taxa selecionada em formato de card
             taxa = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
