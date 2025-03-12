@@ -2,12 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(
-    page_title="Calculador de Parcelas",
-    page_icon=":house:",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+#st.set_page_config(
+ #   page_title="Calculador de Parcelas",
+  #  page_icon=":house:",
+   # layout="wide",
+   # initial_sidebar_state="expanded")
 
 def page_cobranca():
     # Paleta de cores atualizada
