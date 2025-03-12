@@ -11,9 +11,8 @@ toml
 streamlit-option-menu
 matplotlib 
 uuid
-st_aggrid
-PIL
+streamlit-aggrid
+pillow
 df2img
-io
 traceback2
 openpyxl
