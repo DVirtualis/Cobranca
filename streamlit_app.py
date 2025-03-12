@@ -7,7 +7,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+# Verificação de autenticação
+if not st.experimental_user.is_logged_in:
+    st.title("🔒 Acesso Restrito - Virtualis")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.image("https://cdn-icons-png.flaticon.com/512/2965/2965278.png", width=200)
+        if st.button("🔐 Entrar com Google"):
+            st.login()
+        st.markdown("---")
+        st.caption("Você precisa estar autenticado para acessar esta aplicação")
+    st.stop()
+    
+    
 from parcelamento import page_parcelamento_cartao
 from cobranca import page_cobranca
 from calculo_parcelas import page_calculo_parcelas

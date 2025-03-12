@@ -19,13 +19,7 @@ import os
 DATA_PATH = "edited_data.csv"
 
 NEW_COLS = ['Data de Contato', 'Meio de Contato', 'Operador', 'Retorno Cliente']
-# Deve ser o primeiro comando no script
-#st.set_page_config(
-  #  page_title="Painel de Contas a Receber",
-   # page_icon="💳",
-    #layout="wide",
-    #initial_sidebar_state="expanded"
-#)
+
 
 # Configuração inicial do painel
 def page_cobranca():
