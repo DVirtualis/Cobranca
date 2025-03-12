@@ -18,7 +18,7 @@ from openpyxl.styles import PatternFill, Font
 
 # Deve ser o primeiro comando no script
 #st.set_page_config(
-  #  page_title="Painel de Contas a Pagar",
+  #  page_title="Painel de Contas a Receber",
    # page_icon="💳",
     #layout="wide",
     #initial_sidebar_state="expanded"
@@ -298,10 +298,28 @@ INNER JOIN dbCronos.dbo.TipoDoc td ON c.CodTipoDoc = td.CodTipoDoc
 INNER JOIN dbCronos.dbo.PlanoConta pc ON c.IdPlanoConta = pc.IdPlanoConta
 INNER JOIN dbCronos.dbo.Filiais f ON c.CodFilial = f.CodFilial
 WHERE c.PagRec = 'R'
+AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
+    'AÇÃO JUDICIAL',
+    'ACESSORIA COBRANÇA',
+    'ACESSORIA NEGATIVADO',
+    'ACORDO',
+    'BOLETO ACORDO',
+    'BOLETO ANT. FR.',
+    'BOLETO ANTECIPADO',
+    'BOLETO ARACAJU',
+    'BOLETO LAURO',
+    'BOLETO VITORIA',
+    'BOLETO DESCONTADO',
+    'BOLETO BORDERÔ',
+    'BOLETO INTER',
+    'INADIMPLENTES',
+    'NEGOCIAÇÃO DE DEBITO'
+)
     """
         data = pd.read_sql(query, con=cnxn)
         return data
 
+    # Ajustar para o restante das mudanças solicitadas...
 
 
     def safe_to_datetime(series):
@@ -348,65 +366,48 @@ WHERE c.PagRec = 'R'
             })
         return semanas
     
-# Mapeamento completo da coluna "Plano de Contas" para as categorias de despesa
-    mapeamento = {
-        'Impostos': [
-            'ICMS Normal', 'ICMS Substituto', 'ICMS Antecipado', 'PIS - 8109', 'Cofins - 2172',
-            'IRPJ', 'CSLL', 'ISS', 'IPTU', 'IOF', 'Contribuição Social', 'Contribuição Sindical',
-            'Taxa Incêndios', 'Taxa Frete Comodato', 'Taxa de Entrega (Frete)', 'Multas de ICMS',
-            'Parcelamento Dívida Ativa - 1124', 'IRRF - INSS do Prolabore', 'IRRF - INNS Funcionários',
-            'Parcelamento Simples Nacional', 'Parcelamento ICMS', 'Parcelamento PIS', 'Parcelamento COFINS',
-            'Parcelametos Previdenciário Demais Débitos', 'TCFA - TAXA AMBIENTAL', 'IPI - Imposto sobre Produtos Industrializados',
-            'Imposto Retido', 'DAS / Simples Nacional', 'Taxas de Certificações e Registros', 'GNRE',
-            'GRU Judicial', 'DAM - não usar mais', 'DAE - não usar mais', 'DARF * não usar mais esse', 
-        'TLLF', 'Parcelamento ISS', 'CPMF'
+    # Substituir o mapeamento anterior por este novo para categorias de clientes
+    mapeamento_clientes = {
+        'Fornecedores': [
+            'Fornecedores Mercantil', 'Fretes Compra', 'Compra de Produto',
+            'Material de Limpeza', 'Mat.Higiene Limpeza e Mat. Copa e Cozinha',
+            'Uso e Consumo Diversos'
         ],
-        'RH': [
-            'Salários', 'Gratificações', 'Distribuição de Lucros','Férias', '13º Salário', 'PRO LABORE', 'Vale Transporte',
-            'Inss / Gps', 'Fgts', 'Rescisões e Indenizações', 'Adiantamento de Salário', 'Adianatamento Salarial Fora da Folha',
-            'Hora Extra', 'Vale Refeições', 'Assistencia Médica', 'Assistencia Odontologica', 'Farmácia',
-            'Lazer e Confraternizações', 'Formação Profissional', 'Estágio', 'Treinamento', 'Fardamento',
-            'Exames admissionais e demissionais', 'Seguro de Vida', 'Material de EPI', 'Ajuda de Custo',
-            'CIPA', 'Aniversariante do Mês', 'coffee break', 'Endomarketing', 'Cursos e treinamentos', 'Diretor', 'Sócios', 'Emprestimo por fora da folha'
+        'Serviços': [
+            'Prestador de Serviço PF', 'Prestador de Serviço PJ', 'Venda de Serviço',
+            'NF Serviço', 'Cursos e treinamentos', 'Endomarketing'
         ],
-        'Pagamento a Fornecedores': [
-            'Fornecedores Mercantil', 'Fretes Compra', 'Frete Vendas Mercantil', 'Frete Grátis Comodato',  
-            'Frete Pago Cliente', 'Frete Serviço', 'Compra de Produto', 'Devolução de Compra', 'Adiantamento a Fornecedor',  
-            'Prestador de Serviço PF', 'Prestador de Serviço PJ', 'Comissão Serviço', 'Comissão Vendas', 'Comissao PJ',  
-            'Equipamentos de Informatica', 'Máquinas e Equipamentos', 'Aquisição de Software', 'Móveis e Equipamentos',  
-            'Material de Informática', 'Uso e Consumo Diversos', 'Embalagens', 'Equi. transporte de Material',  
-            'Aluguel de Equipamentos', 'Consórcios Bancários', 'Consórcio de Imovél', 'Taxa Adm de Consorcio',  
-            'Nota de Credito', 'Bonificação', 'Prémio de vendas', 'Reembolso', 'Empréstimo por antecipados',  
-            'Operação de Crédito BNDS', 'Frete Grátis E-commerce'  
-
+        'Vendas': [
+            'Venda Mercantil', 'Venda E-commerce', 'Comissao PJ',
+            'Frete Vendas Mercantil', 'Nota de Credito', 'Bonificação'
         ],
-       'Pagamentos Administrativos': [
-            'Telefone', 'Cia de Aguas e Esgotos', 'Energia Elétrica', 'Aluguel do Imóvel', 'Material Expediente, Papelaria',
-            'Matérial de Limpeza', 'Honorários Contabeis', 'Honorários Jurídicos', 'Honorários Sistema', 'Honorários Ti',
-            'Assinaturas de Jornais / Revistas', 'Internet', 'Manutenção Predial', 'Seguro de Imóveis', 'Serviço de TV',
-            'Serviços de Segurança', 'Correios / Sedex', 'Despesas Viagens Vendedor Externo', 'Despesas Plotagens / Xerox',
-            'Publicidade', 'Patrocinio', 'Eventos Realizados', 'Brindes', 'Divulgação Rede Social', 'Carro de Som',
-            'Panfletos', 'Eventos', 'Manutenção Eletrodomésticos e Eletroeletrônicos', 'Reformas e Construções',
-            'Reparos e Consertos de Bens e Moveis', 'Predios', 'Construções e Reformas', 'Combustivel', 'Emplacamento',
-            'Ipva', 'Multas de Trânsito', 'Peça e Serviço para Veiculo', 'Seguro de Veiculo', 'Leasing de Veiculo',
-            'Consórcio de Veiculo', 'Lavagem', 'Estacionamento', 'Pedágio', 'Viagens Vendedor', 'Viagens Geral Colaborador',
-            'Combustível Vendedores', 'Alimentação Vendedores', 'Hospedagem Vendedor', 'Hospedagem Colaborador',
-            'Combustível Colaborador', 'Alimentação Colaborador', 'Passagens', 'Uber/Aplicativos', 'Deslocamento Corporativo / Outros',
-            'Mat.Higiene Limpeza e Mat. Copa e Cozinha', 'Autenticação de Firma', 'Alvará', 'Taxa Boleto Não Pago',
-            'Tarifa Bancaria', 'Despesa de Cobrança Bancaria', 'Taxa Administrativa de Cartão', 'Serasa / SPC', 'Valores SKY',
-            'NF´S SKY', 'Gastos RDVC SKY', 'Reembolso RDVC SKY', 'Crédito Voucher', 'Recarga', 'Fatura Cartão de Crédito',
-            'CARTÃO COPORATIVO', 'Animador', 'Outras Compensações'
+        'Logística': [
+            'Frete Pago Cliente', 'Frete Grátis Comodato', 'Taxa Frete Comodato',
+            'Uber/Aplicativos', 'Suprimento de Caixa'
+        ],
+        'Financeiro': [
+            'Empréstimo Bradesco Capital de Giro', 'Empréstimo Santander',
+            'Antecipação de Boletos', 'Capital de Giro', 'Taxa Administrativa de Cartão',
+            'Reembolso', 'Recarga', 'Resgate automático'
+        ],
+        'Operacional': [
+            "Material Expediente, Papelaria", 'Valores SKY', 'MEU ACESSO',
+            'Santander Lauro', 'Santander Vitória', 'Verba RDVC'
         ]
     }
-    # Função para categorizar o "Plano de Contas"
-    def categorizar(plano_contas):
-        for categoria, itens in mapeamento.items():
+
+    def categorizar_clientes(plano_contas):
+        for categoria, itens in mapeamento_clientes.items():
             if plano_contas in itens:
                 return categoria
-        return 'Outros'  # Para itens não mapeados
+        return 'Outros'
 
-    # Aplicar o mapeamento (assumindo que 'data' e 'mapeamento' já estão definidos anteriormente no código)
-    data['Categoria Despesa'] = data['Plano de Contas'].apply(categorizar)
+    # Aplicar o novo mapeamento
+    data['Categoria Cliente'] = data['Plano de Contas'].apply(categorizar_clientes)
+
+
+
+
 
     # Sidebar para filtros
     st.sidebar.title("Filtros")
@@ -461,22 +462,22 @@ WHERE c.PagRec = 'R'
         key="status_pagamento"
     )
 
-    # Filtro de Categoria Despesa com multiselect, incluindo "Todos" como padrão
-    despesas_disponiveis = ['Todos'] + sorted(filtered_data['Categoria Despesa'].dropna().unique().tolist())
-    despesa_selecionada = st.sidebar.multiselect(
-        "Filtrar por Tipo de Despesas",
-        despesas_disponiveis,
+    # Filtro de Categoria Cliente com multiselect, incluindo "Todos" como padrão
+    clientes_disponiveis = ['Todos'] + sorted(filtered_data['Categoria Cliente'].dropna().unique().tolist())
+    cliente_selecionado = st.sidebar.multiselect(
+        "Filtrar por Tipo de Cliente",
+        clientes_disponiveis,
         default=['Todos'],
-        key="despesa_selecionada"
+        key="cliente_selecionado"
     )
 
     # Filtros adicionais
     mes_selecionado = st.sidebar.selectbox("Filtrar por Mês", ['Todos'] + list(filtered_data['Mês'].cat.categories))
-    filtro_x = st.sidebar.selectbox("Filtrar eixo X", ['Plano de Contas', 'Plano de Contas TP', 'Portador', 'Tipo Documento', 'Meio de Pagamento', 'Categoria Despesa'])
+    filtro_x = st.sidebar.selectbox("Filtrar eixo X", ['Plano de Contas', 'Plano de Contas TP', 'Portador', 'Tipo Documento', 'Meio de Pagamento', 'Categoria Cliente'])
     # Filtro simplificado para gráfico principal
     categoria_grafico = st.sidebar.selectbox(
         "Selecione o Gráfico Principal",
-        ['Mês', 'Plano de Contas TP', 'Portador', 'Tipo Documento', 'Categoria Despesa']
+        ['Mês', 'Plano de Contas TP', 'Portador', 'Tipo Documento', 'Categoria Cliente']
     )
 
     # Filtragem dos dados
@@ -487,8 +488,8 @@ WHERE c.PagRec = 'R'
         filtered_data = filtered_data[filtered_data['Mês'] == mes_selecionado]
     if status_pagamento != ['Todos']:
         filtered_data = filtered_data[filtered_data['Status Pagamento'].isin(status_pagamento)]
-    if despesa_selecionada != ['Todos']:
-        filtered_data = filtered_data[filtered_data['Categoria Despesa'].isin(despesa_selecionada)]
+    if cliente_selecionado != ['Todos']:
+        filtered_data = filtered_data[filtered_data['Categoria Cliente'].isin(cliente_selecionado)]
 
     # Sumário mensal e semanal
     monthly_summary = filtered_data.groupby([filtro_x, 'Mês']).agg({'VR Nominal': 'sum'}).reset_index()
@@ -526,8 +527,8 @@ WHERE c.PagRec = 'R'
         st.error("A coluna 'VR Nominal' está ausente no resumo mensal.")
         return
 
-    # Sumário por categoria de despesa
-    categoria_summary = filtered_data.groupby('Categoria Despesa').agg({'VR Nominal': 'sum'}).reset_index()
+    # Sumário por categoria de cliente
+    categoria_summary = filtered_data.groupby('Categoria Cliente').agg({'VR Nominal': 'sum'}).reset_index()
     total_categoria = categoria_summary['VR Nominal'].sum()
     categoria_summary['Percentual'] = (categoria_summary['VR Nominal'] / total_categoria) * 100
 
@@ -538,7 +539,7 @@ WHERE c.PagRec = 'R'
         periodo = f"de {dias_selecionados[0].strftime('%d/%m/%Y')} até {dias_selecionados[1].strftime('%d/%m/%Y')}"
 
     # Exibir resumo por categoria com período no título
-    st.subheader(f"Resumo por Categoria de Despesa ({periodo})")
+    st.subheader(f"Resumo por Categoria de Cliente ({periodo})")
     st.dataframe(
         categoria_summary.style.format({
             'VR Nominal': 'R${:,.2f}',
@@ -985,7 +986,7 @@ WHERE c.PagRec = 'R'
     show_legend = st.checkbox("Exibir Legenda", value=True)
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         f"Contas em Atraso até {today.strftime('%d/%m/%Y')}",
-        f"Contas a Pagar Hoje {today.strftime('%d/%m/%Y')}",
+        f"Contas a Receber Hoje {today.strftime('%d/%m/%Y')}",
         f"Contas da Semana {start_of_week.strftime('%d/%m/%Y')} - {end_of_week.strftime('%d/%m/%Y')}",
         f"Contas do Mês {start_of_month.strftime('%m/%Y')}",
         "Créditos e Devoluções"
@@ -1003,7 +1004,7 @@ WHERE c.PagRec = 'R'
             (pd.to_datetime(filtered_data['Dt Vencimento']).dt.normalize() == pd.to_datetime(today).normalize()) &
             (~filtered_data['Portador'].isin(portadores_creditos_devolucoes))
         ]
-        display_aggrid_table(f"Contas a Pagar Hoje {today.strftime('%d/%m/%Y')}", today_data, key="aggrid_today")
+        display_aggrid_table(f"Contas a Receber Hoje {today.strftime('%d/%m/%Y')}", today_data, key="aggrid_today")
 
     with tab3:
         week_data = filtered_data[
