@@ -12,11 +12,14 @@ if not st.experimental_user.is_logged_in:
     st.title("🔒 Acesso Restrito - Virtualis")
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        st.image("https://cdn-icons-png.flaticon.com/512/2965/2965278.png", width=200)
-        if st.button("🔐 Entrar com Google"):
-            st.login()
-        st.markdown("---")
-        st.caption("Você precisa estar autenticado para acessar esta aplicação")
+        try:
+            st.image("https://cdn-icons-png.flaticon.com/512/2965/2965278.png", width=200)
+            if st.button("🔐 Entrar com Google"):
+                st.login()
+            st.markdown("---")
+            st.caption("Você precisa estar autenticado para acessar esta aplicação")
+        except Exception as e:   
+            st.error(f"Erro na autenticação: {str(e)}") 
     st.stop()
     
     
@@ -198,13 +201,31 @@ def p_calculo_parcelas():
     page_calculo_parcelas()  # Chama a função de Calcul
 # Criando o menu lateral para navegação com o Streamlit-Option-Menu
 with st.sidebar:
+    
+    # Informações do Usuário
+    if st.experimental_user.is_logged_in:
+        st.markdown(f"""
+            ### 👤 Informações do Usuário
+            **Nome:** {st.experimental_user.get('name', 'Não informado')}  
+            **Email:** {st.experimental_user.email}
+        """)
+        st.markdown("---")
+        
     pagina_selecionada = option_menu(
-        menu_title="Menu",
+        menu_title="📂 Navegação",
         options=["Parcelamento", "Cobrança", "Cálculo Parcelas"],
         icons=["currency-exchange", "cash", "bar-chart", "bar-chart", "bar-chart", "bar-chart"],  # Alterado o ícone de Comparativo
         menu_icon="cast",
-        default_index=0,
+        default_index=0,styles={
+            "container": {"padding": "5px"},
+            "nav-link-selected": {"background-color": theme_config["theme.primaryColor"]}
+        }
     )
+    # Botão de Logout
+    if st.button("🚪 Sair da Aplicação", use_container_width=True, key="logout_btn"):
+        st.logout()
+        st.experimental_rerun()
+        
 
 # Lógica para mostrar a página selecionada, agora com chamadas diretas para as funções
 if pagina_selecionada == "Parcelamento":
