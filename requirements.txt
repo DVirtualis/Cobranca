@@ -16,3 +16,4 @@ pillow
 df2img
 traceback2
 openpyxl
+Authlib
