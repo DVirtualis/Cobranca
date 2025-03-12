@@ -2,9 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Configurações de tema e estilo (mantenha igual às suas páginas originais)
+st.set_page_config(
+    page_title="Calculador de Parcelas",
+    page_icon=":house:",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-def page_cobranca():
+def page_parcelamento_cartao():
     # Paleta de cores atualizada
     COLORS = ['##0095fb', '#7C3AED', '#3B82F6', '#10B981', '#EF4444', '#F59E0B']
     COLORS_DARK = ['#1b4f72', '#d35400', '#145a32', '#7b241c', '#5b2c6f']

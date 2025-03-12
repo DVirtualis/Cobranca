@@ -1,6 +1,12 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
+#st.set_page_config(
+ #   page_title="Calculador de Parcelas",
+  #  page_icon=":house:",
+   # layout="wide",
+    #initial_sidebar_state="expanded")
 
 def page_parcelamento_cartao():
     # Paleta de cores atualizada
@@ -140,7 +146,7 @@ def page_parcelamento_cartao():
 
         /* ===== [GENÉRICO] ===== */
         /* Ajusta elementos dinâmicos */
-        .st-emotion-cache-1cj4yv0,
+        .st-emotion-cache-cfkyto,
         .st-emotion-cache-efbu8t {{
             background-color: {theme_config["theme.secondaryBackgroundColor"]} !important;
         
@@ -178,203 +184,622 @@ def page_parcelamento_cartao():
         """,
         unsafe_allow_html=True
     )
-    # Configuração das taxas de juros
-    TAXAS = {
-        "Point": {
-            
-            2: 0.0442,
-            3: 0.0532,
-            4: 0.0622,
-            5: 0.0712,
-            6: 0.0802,
-            7: 0.0892,
-            8: 0.0982,
-            9: 0.1072,
-            10: 0.1162,
-            11: 0.1252,
-            12: 0.1342
-        },
-        "Link de Pagamento": {
-            "Débito": 0.015,
-            "Crédito a Vista": 0.0310,
-            "Pix":0.0049,
-            2: 0.0439,
-            3: 0.0514,
-            4: 0.0589,
-            5: 0.0664,
-            6: 0.0739,
-            7: 0.0818,
-            8: 0.0893,
-            9: 0.0968,
-            10: 0.1043,
-            11: 0.1118,
-            12: 0.1193
-        }, 
-        "Visa": {
-            "Crédito a Vista": 0.0235,
-            "Débito a Vista": 0.0142,
-            "QRCode pelo App": 0.0075,
-            2: 0.0269, 
-            3: 0.0269,
-            4: 0.0269,
-            5: 0.0269,
-            6: 0.0269,
-            7: 0.0300,
-            8: 0.0300,
-            9: 0.0300,
-            10: 0.0300,
-            11: 0.0300,
-            12: 0.0300,
-            13: 0.0270,
-            14: 0.0270,
-            15: 0.0270,
-            16: 0.0270,
-            17: 0.0270,
-            18: 0.0270
-        },
-        "Visa Crédito com Juros": {
-            2: 0.0205, 
-            3: 0.0205,
-            4: 0.0205,
-            5: 0.0205,
-            6: 0.0205,
-            7: 0.0205,
-            8: 0.0205,
-            9: 0.0205,
-            10: 0.0205,
-            11: 0.0205,
-            12: 0.0205,  
-        }
-    }
-
+    
+    
+ # Função de formatação monetária
     def formatar_moeda(valor):
         """Formata valores monetários no padrão brasileiro"""
         return f"R$ {valor: ,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    # Configuração das taxas de juros das máquinas (mantido do seu código original)
+    MAQUINAS = {
+        "Mercado Pago":{
+        "Point": {2: 0.0442, 3: 0.0532, 4: 0.0622, 5: 0.0712, 6: 0.0802, 7: 0.0892, 8: 0.0982, 9: 0.1072, 10: 0.1162, 11: 0.1252, 12: 0.1342},
+        "Link de Pagamento": {"Débito": 0.015, "Crédito a Vista": 0.0310, "Pix":0.0049, 2: 0.0439, 3: 0.0514, 4: 0.0589, 5: 0.0664, 6: 0.0739, 7: 0.0818, 8: 0.0893, 9: 0.0968, 10: 0.1043, 11: 0.1118, 12: 0.1193},
+        },
+        "Stone ISAT":{
+        "Visa": {"Crédito a Vista": 0.0235, "Débito a Vista": 0.0142, "QRCode pelo App": 0.0075, 2: 0.0269, 3: 0.0269, 4: 0.0269, 5: 0.0269, 6: 0.0269, 7: 0.0300, 8: 0.0300, 9: 0.0300, 10: 0.0300, 11: 0.0300, 12: 0.0300, 13: 0.0270, 14: 0.0270, 15: 0.0270, 16: 0.0270, 17: 0.0270, 18: 0.0270},
+        "Visa Crédito com Juros": {2: 0.0205, 3: 0.0205, 4: 0.0205, 5: 0.0205, 6: 0.0205, 7: 0.0205, 8: 0.0205, 9: 0.0205, 10: 0.0205, 11: 0.0205, 12: 0.0205},
+        }, 
+        "Stone Virtualis":{
+        "Visa": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
+        "Visa Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+        "MasterCard": {"Crédito a Vista": 0.0269, "Débito a Vista": 0.0177,  2: 0.0303, 3: 0.0303, 4: 0.0303, 5: 0.0303, 6: 0.0303, 7: 0.0327, 8: 0.0327, 9: 0.0327, 10: 0.0327, 11: 0.0327, 12: 0.0327, 13: 0.0327, 14: 0.0327, 15: 0.0327, 16: 0.0327, 17: 0.0327, 18: 0.0327},
+        "AmericanExpress": {"Crédito a Vista": 0.0310,  2: 0.0356, 3: 0.0356, 4: 0.0356, 5: 0.0356, 6: 0.0356, 7: 0.0385, 8: 0.0385, 9: 0.0385, 10: 0.0385, 11: 0.0385, 12: 0.0385},
+        "Cabal": {"Crédito a Vista": 0.0500, "Débito a Vista": 0.0500, 2: 0.0525, 3: 0.0525, 4: 0.0525, 5: 0.0525, 6: 0.0525, 7: 0.0550, 8: 0.0550, 9: 0.0550, 10: 0.0550, 11: 0.0550, 12: 0.0550},
+        "Cabal Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+        "Hipercard":{"Crédito a Vista": 0.0280,  2: 0.0383, 3: 0.0383, 4: 0.0383, 5: 0.0383, 6: 0.0383, 7: 0.0430, 8: 0.0430, 9: 0.0430, 10: 0.0430, 11: 0.0430, 12: 0.0430},
+        "Hipercard Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100},
+        "UnionPay": {"Crédito a Vista": 0.0400, "Débito a Vista": 0.0400,  2: 0.0400, 3: 0.0400, 4: 0.0400, 5: 0.0400, 6: 0.0400, 7: 0.0400, 8: 0.0400, 9: 0.0400, 10: 0.0400, 11: 0.0400, 12: 0.0400},
+        "Elo": {"Crédito a Vista": 0.0335, "Débito a Vista": 0.0186,  2: 0.0385, 3: 0.0385, 4: 0.0385, 5: 0.0385, 6: 0.0385, 7: 0.0402, 8: 0.0402, 9: 0.0402, 10: 0.0402, 11: 0.0402, 12: 0.0402,13: 0.0402, 14: 0.0402, 15: 0.0402, 16: 0.0402, 17: 0.0402, 18: 0.0402},
+        "Elo Crédito com Juros": {2: 0.0100, 3: 0.0100, 4: 0.0100, 5: 0.0100, 6: 0.0100, 7: 0.0100, 8: 0.0100, 9: 0.0100, 10: 0.0100, 11: 0.0100, 12: 0.0100}
+    }}
+    
+    
+    LOGOS_MAQUINAS = {
+        
+        "Mercado Pago": "images/mercado-pago.svg",
+        "Stone ISAT": "images/stone.png",
+        "Stone Virtualis": "images/stone.png",
+    }
+    # Caminhos das imagens das operadoras
+    LOGOS_OPERADORAS = {
+        "Point": "images/mercado-pago.svg",
+        "Link de Pagamento": "images/mercado-pago.svg",
+        "Visa": "images/visa.png",
+        "Visa Crédito com Juros": "images/visa.png",
+        "MasterCard": "images/mastercard.png",
+        "AmericanExpress": "images/american_express.png",
+        "Cabal": "images/cabal.png",
+        "Cabal Crédito com Juros": "images/cabal.png",
+        "Hipercard": "images/hipercard.png",
+        "Hipercard Crédito com Juros": "images/hipercard.png",
+        "UnionPay": "images/unionpay.png",
+        "Elo": "images/elo.svg",
+        "Elo Crédito com Juros": "images/elo.svg"
 
-    def mostrar_calculo(valor_total, taxa, num_parcelas, tipo_parcelamento):
-        """Exibe os cálculos detalhados"""
-        
-        if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
-            taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
-            taxa_total = taxa_base * num_parcelas
-            total_com_juros = valor_total * (1 + taxa_total)
-        else:
-            total_com_juros = valor_total * (1 + taxa)
-        
-        valor_parcela = total_com_juros / num_parcelas if isinstance(num_parcelas, int) else total_com_juros
-        juros_total = total_com_juros - valor_total
-        
-        st.subheader("Resultado do Cálculo")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Valor Total", formatar_moeda(valor_total))
-        with col2:
-            if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
-                taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
-                st.metric(
-                    "Taxa Aplicada", 
-                    f"{taxa_base:.2%} × {num_parcelas}",
-                    help="Taxa por parcela multiplicada pelo número de parcelas"
+    }
+
+
+     # Funções de cálculo
+    def calcular_price(pv, taxa_mensal, meses):
+        if taxa_mensal == 0: return pv / meses
+        return (pv * taxa_mensal) / (1 - (1 + taxa_mensal)**-meses)
+
+    def calcular_sac(pv, taxa_mensal, meses):
+        amortizacao = pv / meses
+        return [amortizacao + (pv - amortizacao * i) * taxa_mensal for i in range(meses)]
+
+    def calcular_sacre(pv, taxa_mensal, meses):
+        saldo = pv
+        amort_base = pv / meses
+        return [amort_base * (1 + taxa_mensal)**(i+1) + (saldo - amort_base * i) * taxa_mensal for i in range(meses)]
+
+    def calcular_mejs(pv, taxa_mensal, meses):
+        total_juros = pv * taxa_mensal * meses
+        return (pv + total_juros) / meses
+
+   # Interface
+    st.title("📈 Calculadora Financeira Integrada")
+    st.markdown("---")
+
+    modo_calculo = st.radio(
+        "**Selecione o Tipo de Cálculo:**", 
+        ["🏦 Financiamento", "💳 Parcelamento Simples", "🎫 Boleto" ],
+        horizontal=True,
+        key="modo_calculo_radio"
+    )
+    if modo_calculo != "🎫 Boleto":
+        with st.expander("⚙️ Configurações da Taxa", expanded=True):
+            col1, col2, col3 = st.columns([2, 2, 3])
+
+            with col1:
+                # Seleção da Máquina com logo
+                maquina = st.selectbox(
+                    "**Máquina**",
+                    options=list(MAQUINAS.keys()),
+                    key="maquina_select"
                 )
-            else:
-                st.metric("Taxa Aplicada", f"{taxa:.2%}")
-        with col3:
-            st.metric("Total Parcelado", formatar_moeda(total_com_juros))
-        
-        # Mostrar detalhes do cálculo
-        with st.expander("Ver detalhes do cálculo"):
-            if tipo_parcelamento in ["Visa", "Visa Crédito com Juros"] and isinstance(num_parcelas, int):
-                st.markdown(f"""
-                **Fórmula utilizada (Parcelado):**  
-                - Taxa Total = Taxa por Parcela × Número de Parcelas  
-                - Valor Total com Juros = Valor Total × (1 + Taxa Total)  
-                - Valor da Parcela = Valor Total com Juros ÷ Número de Parcelas  
                 
-                **Aplicando os valores:**  
-                1\. Taxa Total = {taxa_base:.2%} × {num_parcelas} = {taxa_total:.2%}  
-                2\. {formatar_moeda(valor_total).replace('$', '\\$')} × (1 + {taxa_total:.2%}) = {formatar_moeda(total_com_juros).replace('$', '\\$')}  
-                3\. {formatar_moeda(total_com_juros).replace('$', '\\$')} ÷ {num_parcelas} = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
-                """)
-            else:
-                st.markdown(f"""
-                **Fórmula utilizada:**  
-                - Valor Total com Juros = Valor Total × (1 + Taxa)  
-                - Valor da Parcela = Valor Total com Juros ÷ Número de Parcelas  
+                # Exibição da logo da máquina
+                subcol1, subcol2 = st.columns([1, 2])
+                with subcol1:
+                    if maquina in LOGOS_MAQUINAS:
+                        st.image(LOGOS_MAQUINAS[maquina], width=70)
                 
-                **Aplicando os valores:**  
-                1\. {formatar_moeda(valor_total).replace('$', '\\$')} × (1 + {taxa:.2%}) = {formatar_moeda(total_com_juros).replace('$', '\\$')}  
-                2\. {formatar_moeda(total_com_juros).replace('$', '\\$')} ÷ {num_parcelas} = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
-                """)
+                with subcol2:
+                    # Taxa de antecipação condicional
+                    if maquina == "Mercado Pago":
+                        taxa_value = 0.0
+                        disabled = True
+                    elif maquina in ["Stone ISAT", "Stone Virtualis"]:
+                        taxa_value = 1.40
+                        disabled = True
+                    else:
+                        taxa_value = 2.0
+                        disabled = False
+                    
+                    taxa_antecipacao = st.number_input(
+                        "**Taxa de Antec. (%)**",
+                        min_value=0.0,
+                        max_value=100.0,
+                        value=taxa_value,
+                        step=0.1,
+                        format="%.2f",
+                        disabled=disabled
+                    ) / 100
 
-    
-    st.title("Calculadora de Parcelamento")
-    
-    # Entrada de dados
-    valor_total = st.number_input(
-        "Valor Total (R$)", 
-        min_value=0.01, 
-        step=100.0,
-        format="%.2f"
-    )
-    
-    tipo_parcelamento = st.selectbox(
-        "Tipo de Parcelamento",
-        options=list(TAXAS.keys())
-    )
-    
-    num_parcelas = st.selectbox(
-    "Número de Parcelas",
-    options=list(TAXAS[tipo_parcelamento].keys()),
-    format_func=lambda x: f"{x}X" if isinstance(x, int) else x
-)
-    
-    # Obter taxa selecionada com regras especiais para Visa
-    if tipo_parcelamento in ["Stone - Visa", "Stone - Visa Crédito com Juros"] and isinstance(num_parcelas, int):
-        taxa_base = TAXAS[tipo_parcelamento][num_parcelas]
-        taxa = taxa_base * num_parcelas
-    else:
-        taxa = TAXAS[tipo_parcelamento][num_parcelas]
-    
+            with col2:
+                # Seleção da Operadora com logo
+                tipo_parcelamento = st.selectbox(
+                    "**Operadora**", 
+                    options=list(MAQUINAS[maquina].keys()),
+                    key="operadora_select"
+                )
+                
+                # Exibição da logo da operadora
+                subcol1, subcol2 = st.columns([1, 2])
+                with subcol1:
+                    if tipo_parcelamento in LOGOS_OPERADORAS:
+                        st.image(LOGOS_OPERADORAS[tipo_parcelamento], width=70)
+                
+                with subcol2:
+                    num_parcelas = st.selectbox(
+                        "**Forma Pagamento**",
+                        options=list(MAQUINAS[maquina][tipo_parcelamento].keys()),
+                        format_func=lambda x: f"{x}X" if isinstance(x, int) else x,
+                        key="forma_pagamento"
+                    )
 
-    
-    # Calcular e mostrar resultados
-    if valor_total > 0:
-        mostrar_calculo(valor_total, taxa, num_parcelas, tipo_parcelamento)
-        
-        # Mostrar tabela comparativa de taxas
-        st.subheader("Tabela Completa de Taxas")
-        
-        # Configurar pandas para mostrar todo o conteúdo
-        pd.set_option('display.max_colwidth', None)
-        
-        df_taxas = pd.DataFrame.from_dict(TAXAS[tipo_parcelamento], orient='index', columns=['Taxa'])
-        df_taxas.index.name = 'Parcelas'
-        
-        # Aplicar formatação especial para Visa
-        if tipo_parcelamento in ["Stone - Visa", "Stone - Visa Crédito com Juros"]:
-            df_taxas['Taxa'] = df_taxas.apply(
-                lambda x: f"{x['Taxa']:.2%} por parcela" if isinstance(x.name, int) else f"{x['Taxa']:.2%}",
-                axis=1
-            )
-        else:
-            df_taxas['Taxa'] = df_taxas['Taxa'].apply(lambda x: f"{x:.2%}")
+            with col3:
+                # Cálculo das taxas conforme tipo de máquina
+                taxa_bruta = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+                is_parcelado = isinstance(num_parcelas, int)
+                
+                if maquina == "Mercado Pago":
+                    if is_parcelado:
+                        # Taxa bruta = total, calcular mensal
+                        taxa_total = taxa_bruta
+                        taxa_mensal = (1 + taxa_bruta) ** (1/num_parcelas) - 1
+                    else:
+                        # À vista: mesma taxa para ambos
+                        taxa_mensal = taxa_bruta
+                        taxa_total = taxa_bruta
+                else:
+                    if is_parcelado:
+                        # Taxa bruta = mensal, calcular total
+                        taxa_mensal = taxa_bruta
+                        taxa_total = (1 + taxa_bruta) ** num_parcelas - 1
+                    else:
+                        # À vista: mesma taxa para ambos
+                        taxa_mensal = taxa_bruta
+                        taxa_total = taxa_bruta
 
-        # Configurar a exibição da tabela
-        with st.container():
-            st.markdown("""
-            <style>
-                .full-width-table {
-                    width: 100%;
-                    white-space: nowrap;
+                st.markdown(f"""
+                <div style="
+                    background-color: {theme_config['theme.secondaryBackgroundColor']};
+                    padding: 1rem;
+                    border-radius: 10px;
+                    border: 2px solid {theme_config['theme.primaryColor']};
+                    margin-top: 1.5rem;
+                    text-align: center;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                ">
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.2rem; color: {theme_config['theme.primaryColor']}">💰 Taxas Aplicadas</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <div>
+                            <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Mensal:</span><br>
+                            <span style="color: #2ecc71">{taxa_mensal:.2%}</span>
+                        </div>
+                        <div>
+                            <span style="font-weight: bold; color: {theme_config['theme.textColor']}">Total:</span><br>
+                            <span style="color: #e74c3c">{taxa_total:.2%}</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    # Parâmetros específicos para Boleto
+    if modo_calculo == "🎫 Boleto":
+        with st.expander("💸 Parâmetros do Boleto", expanded=True):
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                # Reduzindo a largura para 200px (ajuste conforme necessário)
+                valor_liquido = st.number_input(
+                    "**Valor Líquido (R$)**", 
+                    min_value=0.01, 
+                    value=1000.0, 
+                    step=100.0,
+                    key="boleto_valor_liquido",
+                    format="%.2f",
+                    help="Insira o valor líquido do boleto"
+                )
+                
+                dias_atraso = st.number_input(
+                    "**Dias em Atraso**",
+                    min_value=0,
+                    value=0,
+                    step=1,
+                    key="boleto_dias_atraso",
+                    help="Número de dias em atraso"
+                )
+                
+                # Adicione este CSS APÓS a criação das colunas
+                st.markdown("""
+                <style>
+                    div[data-testid="stNumberInput"] {
+                    width: 70% !important;
                 }
-                .dataframe td {
-                    min-width: 120px;
-                    padding: 10px !important;
-                }
-            </style>
-            """, unsafe_allow_html=True)
+                </style>
+                """, unsafe_allow_html=True)
+                
+            with col2:
+                multa = valor_liquido * 0.02
+                juros_diarios = valor_liquido * 0.00033
+                total_juros = juros_diarios * dias_atraso
+                valor_total = valor_liquido + multa + total_juros
+                
+                st.markdown(f"""
+                    <div style="
+                        background-color: {theme_config['theme.secondaryBackgroundColor']};
+                        padding: 1rem;
+                        border-radius: 10px;
+                        border: 2px solid {theme_config['theme.primaryColor']};
+                        margin-top: 1.5rem;
+                        text-align: center;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    ">
+                        <div style="margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.2rem; color: {theme_config['theme.primaryColor']}">💰 Encargos do Boleto</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+                            <div>
+                                <span style="font-weight: bold; font-size: 1.4rem; color: {theme_config['theme.textColor']}">Multa:</span><br>
+                                <span style="color: #097aaa; font-size: 1.5rem">{formatar_moeda(multa)}</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: bold; font-size: 1.4rem; color: {theme_config['theme.textColor']}">Juros:</span><br>
+                                <span style="color: #097aaa; font-size: 1.5rem">{formatar_moeda(total_juros)}</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: bold; font-size: 1.4rem; color: {theme_config['theme.textColor']}">Dias:</span><br>
+                                <span style="color: #097aaa; font-size: 1.5rem">{dias_atraso} dias</span>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;">
+                            <div>
+                                <span style="font-weight: bold; font-size: 1.6rem; color: {theme_config['theme.textColor']}">Total do Boleto:</span><br>
+                                <span style="color: #026b02; font-size: 2rem; font-weight: bold;">{formatar_moeda(valor_total)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                valor = valor_total
+                desconto = 0.0
+                meses = 1            
+    # Inicialização segura das variáveis
+    valor = 0.0
+    desconto = 0.0
+    meses = 1
+    
+    if modo_calculo == "🏦 Financiamento":
+        with st.expander("📊 Parâmetros do Financiamento", expanded=True):
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                valor = st.number_input("**Valor Bruto (R$)**", 
+                                      min_value=0.01, 
+                                      value=10000.0, 
+                                      step=100.0,
+                                      key="valor_bruto")
+                desconto = st.number_input("**Desconto (R$)**", 
+                                         min_value=0.0, 
+                                         max_value=valor if valor > 0 else 0.0, 
+                                         value=0.0, 
+                                         step=100.0,
+                                         key="desconto")
+            with col2:
+                percentual = (desconto / valor * 100) if valor > 0 else 0.0
+                st.metric("**Percentual de Desconto**", f"{percentual:.2f}%")
+                st.metric("**Valor Líquido**", formatar_moeda(valor - desconto))
             
-            st.dataframe(
-                df_taxas,
-                use_container_width=True,
-                height=(len(df_taxas) * 35 + 40) ) # Altura dinâmica baseada no número de linhas
+            metodo = st.selectbox("**Método de Amortização**",
+                                ["Price", "SAC", "SACRE", "MEJS"],
+                                key="metodo_amortizacao")
+            meses = num_parcelas if isinstance(num_parcelas, int) else 1
+    elif modo_calculo == "💳 Parcelamento Simples":
+        with st.expander("💸 Parâmetros do Parcelamento", expanded=True):
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                valor = st.number_input("**Valor Total (R$)**", 
+                                      min_value=0.01, 
+                                      value=10000.0, 
+                                      step=100.0,
+                                      key="valor_total")
+                desconto = st.number_input("**Desconto (R$)**", 
+                                         min_value=0.0, 
+                                         max_value=valor if valor > 0 else 0.0, 
+                                         value=0.0, 
+                                         step=100.0,
+                                         key="desconto")
+            with col2:
+                percentual = (desconto / valor * 100) if valor > 0 else 0.0
+                st.metric("**Percentual de Desconto**", f"{percentual:.2f}%")
+                st.metric("**Valor Líquido**", formatar_moeda(valor - desconto))
+                meses = num_parcelas if isinstance(num_parcelas, int) else 1
+                st.metric("**Parcelas**", meses if isinstance(num_parcelas, int) else "À Vista")
+    
+        
+        
+    st.markdown("---")
+    if modo_calculo != "🎫 Boleto":
+        st.markdown("---")
+        calcular_btn = st.button("🔄 Calcular", type="primary")
+    else:
+        st.markdown("---")  # Mantém a linha divisória mesmo para Boleto
+
+    # E ajuste o bloco de cálculo para:
+    if modo_calculo != "🎫 Boleto" and calcular_btn:
+        try:
+
+    
+            tabela = []
+            valor_base = valor - desconto 
+            taxa_antecipacao_valor = valor_base * taxa_antecipacao
+            valor_base_ajustado = valor_base + taxa_antecipacao_valor
+
+            # Obtém a taxa bruta da estrutura MAQUINAS
+            taxa_bruta = MAQUINAS[maquina][tipo_parcelamento][num_parcelas]
+
+            # Cálculo da taxa mensal para Mercado Pago
+            if maquina == "Mercado Pago":
+                if isinstance(num_parcelas, int):
+                    # Taxa bruta = taxa total para parcelado
+                    taxa_total = taxa_bruta
+                    taxa_mensal = (1 + taxa_total) ** (1/num_parcelas) - 1
+                else:
+                    # À vista: taxa única
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
+            else:
+                if isinstance(num_parcelas, int):
+                    # Taxa bruta = taxa mensal para outras máquinas
+                    taxa_mensal = taxa_bruta
+                    taxa_total = (1 + taxa_mensal) ** num_parcelas - 1
+                else:
+                    # À vista: taxa única
+                    taxa_mensal = taxa_bruta
+                    taxa_total = taxa_bruta
+
+            # Cálculo de financiamento
+            total_pago = 0
+            saldo = valor_base_ajustado
+
+            if modo_calculo == "🏦 Financiamento":
+                if metodo == "Price":
+                    parcela = calcular_price(valor_base_ajustado, taxa_bruta, meses)
+                    for i in range(1, meses + 1):
+                        juros = saldo * taxa_bruta
+                        amort = parcela - juros
+                        saldo -= amort
+                        total_pago += parcela
+                        tabela.append({
+                            "Mês": i,
+                            "Parcela": parcela,
+                            "Juros": juros,
+                            "Taxa Mensal": taxa_mensal,
+                            "Taxa Total": taxa_total,
+                            "Amortização": amort,
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
+                        })
+
+                elif metodo == "SAC":
+                    parcelas = calcular_sac(valor_base_ajustado, taxa_bruta, meses)
+                    amort = valor_base_ajustado / meses
+                    for i, parcela in enumerate(parcelas, 1):
+                        juros = saldo * taxa_bruta
+                        saldo -= amort
+                        total_pago += parcela
+                        tabela.append({
+                            "Mês": i,
+                            "Parcela": parcela,
+                            "Juros": juros,
+                            "Taxa Mensal": taxa_mensal,
+                            "Taxa Total": taxa_total,
+                            "Amortização": amort,
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
+                        })
+
+                elif metodo == "SACRE":
+                    parcelas = calcular_sacre(valor_base_ajustado, taxa_bruta, meses)
+                    amort_base = valor_base_ajustado / meses
+                    fator = 1 + taxa_bruta
+                    for i, parcela in enumerate(parcelas, 1):
+                        juros = saldo * taxa_bruta
+                        amort = amort_base * (fator ** i)
+                        saldo -= amort
+                        total_pago += parcela
+                        tabela.append({
+                            "Mês": i,
+                            "Parcela": parcela,
+                            "Juros": juros,
+                            "Taxa Mensal": taxa_mensal,
+                            "Taxa Total": taxa_total,
+                            "Amortização": amort,
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
+                        })
+
+                elif metodo == "MEJS":
+                    parcela = calcular_mejs(valor_base_ajustado, taxa_bruta, meses)
+                    amort = valor_base_ajustado / meses
+                    for i in range(1, meses + 1):
+                        juros = valor_base_ajustado * taxa_bruta
+                        saldo -= amort
+                        total_pago += parcela
+                        tabela.append({
+                            "Mês": i,
+                            "Parcela": parcela,
+                            "Juros": juros,
+                            "Taxa Mensal": taxa_mensal,
+                            "Taxa Total": taxa_total,
+                            "Amortização": amort,
+                            "Saldo Devedor": max(saldo, 0),
+                            "Taxa Antecipação": taxa_antecipacao_valor,
+                            "Valor Base Ajustado": valor_base_ajustado,
+                            "Total Pago": total_pago
+                        })
+                
+                # Detalhes do cálculo
+                with st.expander("🧮 Detalhes do Cálculo", expanded=False):
+                    if metodo == "Price":
+                        st.markdown(f"""
+                        **Fórmula Price:**  
+                        `P = (PV * i) / (1 - (1 + i)^-n)`  
+                        
+                        **Valores Aplicados:**  
+                        - PV (Valor Presente) = {formatar_moeda(valor_base).replace('$', '\\$')}  
+                        - i (Taxa Mensal) = {taxa_mensal:.4%}  
+                        - n (Períodos) = {meses}  
+                        
+                        **Cálculo:**  
+                        ```python
+                        P = ({formatar_moeda(valor_base).replace('$', '\\$')} * {taxa_bruta:.4%}) 
+                        / (1 - (1 + {taxa_bruta:.4%})^-{meses})
+                        = {formatar_moeda(parcela).replace('$', '\\$')}
+                        ```
+                        """)
+                    
+                    elif metodo == "SAC":
+                        st.markdown(f"""
+                        **Fórmula SAC:**  
+                        `Amortização = PV / n`  
+                        `Juros = Saldo Devedor * i`  
+                        `Parcela = Amortização + Juros`  
+                        
+                        **Parâmetros:**  
+                        - Amortização Constante = {formatar_moeda(valor_base/meses).replace('$', '\\$')}  
+            
+                        """)
+                    
+                    elif metodo == "SACRE":
+                        st.markdown(f"""
+                        **Fórmula SACRE:**  
+                        `Fator de Correção = 1 + i`  
+                        `Amortização = (PV/n) * (1 + i)^período`  
+                        
+                        **Componentes:**  
+                        - Fator Mensal = {1 + taxa_bruta:.5f}  
+                        - Amortização Base = {formatar_moeda(valor_base/meses).replace('$', '\\$')} 
+                    
+                        """)
+                    
+                    elif metodo == "MEJS":
+                        total_juros = valor_base * taxa_bruta * meses
+                        st.markdown(f"""
+                        **Fórmula MEJS:**  
+                        `Total Juros = PV * i * n`  
+                        `Parcela = (PV + Total Juros) / n`  
+                        
+                        **Cálculo Direto:**  
+                        - Juros Totais = {formatar_moeda(total_juros).replace('$', '\\$')}  
+                        - Parcela = ({formatar_moeda(valor_base).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
+                                        
+                        """)
+
+            else:  # Parcelamento Simples
+                if isinstance(num_parcelas, int):
+                    total_juros = valor * taxa_bruta * meses
+                    valor_parcela = (valor + total_juros) / meses
+                else:
+                    total_juros = valor * taxa_bruta
+                    valor_parcela = valor + total_juros
+                
+                for i in range(1, meses + 1):
+                    tabela.append({
+                        "Mês": i,
+                        "Parcela": valor_parcela,
+                        "Juros": total_juros / meses if isinstance(num_parcelas, int) else total_juros,
+                        "Taxa Mensal": taxa_mensal,
+                        "Taxa Total": taxa_total,
+                        "Total Pago": valor_parcela * i
+                    })
+                
+                
+                # Detalhes do cálculo
+                with st.expander("🧮 Detalhes do Cálculo", expanded=False):
+                    if isinstance(num_parcelas, int):
+                        st.markdown(f"""
+                        **Fórmula Parcelado:**  
+                        `Total Juros = Valor * Taxa * Parcelas`  
+                        `Valor Parcela = (Valor + Total Juros) / Parcelas`  
+                        
+                        **Aplicação:**  
+                        1. Total Juros = {formatar_moeda(valor).replace('$', '\\$')} * {taxa_bruta:.4%} * {meses} = {formatar_moeda(total_juros).replace('$', '\\$')}  
+                        2. Valor Parcela = ({formatar_moeda(valor).replace('$', '\\$')} + {formatar_moeda(total_juros).replace('$', '\\$')}) / {meses}  
+                        """)
+                    else:
+                        st.markdown(f"""
+                        **Fórmula à Vista:**  
+                        `Valor Total = Valor * (1 + Taxa)`  
+                        
+                        **Cálculo:**  
+                        {formatar_moeda(valor).replace('$', '\\$')} * (1 + {taxa_bruta:.4%}) = {formatar_moeda(valor_parcela).replace('$', '\\$')}  
+                        """)
+
+            # Exibição dos resultados
+            # Exibição dos resultados
+            # Exibição dos resultados
+            if tabela:
+                df = pd.DataFrame(tabela)
+                df = df.dropna(how='all')  # Remove apenas linhas totalmente vazias
+                df['Mês'] = df['Mês'].astype(int)
+
+                if 'Total Pago' not in df.columns:
+                    df['Total Pago'] = df['Parcela'].cumsum()
+
+                # Configurar colunas dinamicamente
+                base_cols = ["Mês", "Taxa Antecipação", "Taxa Mensal", "Taxa Total", "Parcela", "Juros", "Total Pago"]
+
+                if modo_calculo == "🏦 Financiamento":
+                    # Inserir colunas extras nas posições específicas
+                    base_cols.insert(5, "Amortização")
+                    base_cols.insert(6, "Saldo Devedor")
+
+                # Filtrar apenas colunas existentes no DataFrame
+                valid_cols = [col for col in base_cols if col in df.columns]
+
+                # Preencher valores NaN restantes
+                df = df[valid_cols].fillna('-')
+
+                # Formatação condicional
+                st.markdown("### 📑 Detalhamento do Parcelamento")
+                st.dataframe(
+                    df.style.format({
+                        'Mês': lambda x: f"{x:,.0f}",
+                        'Taxa Mensal': lambda x: f"{x:.2%}" if x != '-' else '-',
+                        'Taxa Total': lambda x: f"{x:.2%}" if x != '-' else '-',
+                        **{col: lambda x: formatar_moeda(x) if x != '-' else '-' 
+                        for col in valid_cols 
+                        if col not in ['Mês', 'Taxa Mensal', 'Taxa Total']}
+                    })
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Antecipação'] if 'Taxa Antecipação' in df.columns else [])
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Mensal'] if 'Taxa Mensal' in df.columns else [])
+                    .applymap(lambda x: 'color: #eee60b;', subset=['Taxa Total'] if 'Taxa Total' in df.columns else [])
+                    .applymap(lambda x: 'color: #2ecc71;', subset=['Parcela'] if 'Parcela' in df.columns else [])
+                    .applymap(lambda x: 'color: #2ecc71;', subset=['Juros'] if 'Juros' in df.columns else [])
+                    .applymap(lambda x: 'color: #3498db;', subset=['Total Pago'] if 'Total Pago' in df.columns else [])
+                    .applymap(lambda x: 'color: #f39c12;', subset=['Amortização'] if 'Amortização' in df.columns else [])
+                    .applymap(lambda x: 'color: #f39c12;', subset=['Saldo Devedor'] if 'Saldo Devedor' in df.columns else []),
+                    use_container_width=True, hide_index=True, height=(35 * len(df) + 35)
+                )
+        
+
+
+                # Gráfico
+                fig = px.line(
+                    df, 
+                    x="Mês", 
+                    y="Parcela",
+                    title="📈 Evolução das Parcelas",
+                    markers=True,
+                    color_discrete_sequence=["#2ecc71"]
+                )
+                fig.update_layout(
+                    xaxis_title="Mês",
+                    yaxis_title="Valor da Parcela",
+                    xaxis=dict(tickmode='linear', dtick=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+        except Exception as e:
+            st.error(f"## ❌ Erro no cálculo: {str(e)}")
+            
