@@ -10,3 +10,8 @@ cookie_secret = "68d5a0ae57d77d5714a3deea2e7e6a6c15ca03e49c90489a06832f615822c97
 client_id = "50397923659-hs6ucg0pshk7rpv1lv4kp19f2l9f04fk.apps.googleusercontent.com"
 client_secret = "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"
 server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"
+
+[authorized_users]
+emails = [
+    "danilo@virtualis.tv.br", "virtualis.analisedados@gmail.com", "financeiro@virtualis.tv.br", "mariana@virtualis.tv.br"
+]
