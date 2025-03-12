@@ -9,3 +9,11 @@ pyodbc
 streamlit
 toml
 streamlit-option-menu
+matplotlib 
+uuid
+st_aggrid
+PIL
+df2img
+io
+traceback2
+openpyxl
