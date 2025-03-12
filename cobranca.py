@@ -304,7 +304,6 @@ AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
     'ACESSORIA NEGATIVADO',
     'ACORDO',
     'BOLETO ACORDO',
-    'BOLETO ANT. FR.',
     'BOLETO ANTECIPADO',
     'BOLETO ARACAJU',
     'BOLETO LAURO',
@@ -313,7 +312,7 @@ AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
     'BOLETO BORDERÔ',
     'BOLETO INTER',
     'INADIMPLENTES',
-    'NEGOCIAÇÃO DE DEBITO'
+    'NEGOCIAÇÃO DE DEBITO','NOTA P - FRETE - PIX'
 )
     """
         data = pd.read_sql(query, con=cnxn)
