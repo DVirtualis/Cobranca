@@ -15,7 +15,10 @@ import matplotlib.pyplot as plt
 import openpyxl
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.styles import PatternFill, Font
+import os
+DATA_PATH = "edited_data.csv"
 
+NEW_COLS = ['Data de Contato', 'Meio de Contato', 'Operador', 'Retorno Cliente']
 # Deve ser o primeiro comando no script
 #st.set_page_config(
   #  page_title="Painel de Contas a Receber",
@@ -316,6 +319,21 @@ AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
 )
     """
         data = pd.read_sql(query, con=cnxn)
+        # Adicionar colunas de controle se não existirem
+        new_cols = ['Data de Contato', 'Meio de Contato', 'Operador', 'Retorno Cliente']
+        for col in NEW_COLS:  
+            if col not in data.columns:
+                data[col] = None
+                
+        # Carregar dados editados se existirem
+        if os.path.exists(DATA_PATH):
+            edited = pd.read_csv(DATA_PATH, parse_dates=['Data de Contato'])
+            data = data.merge(edited[['NUMDOC'] + new_cols], on='NUMDOC', how='left', suffixes=('', '_y'))
+            
+            # Combinar colunas
+            for col in new_cols:
+                data[col] = data[col+'_y'].combine_first(data[col])
+                data.drop(col+'_y', axis=1, inplace=True)
         return data
 
     # Ajustar para o restante das mudanças solicitadas...
@@ -405,8 +423,52 @@ AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
     data['Categoria Cliente'] = data['Plano de Contas'].apply(categorizar_clientes)
 
 
+    # Novo processamento para classificação por dias de atraso
+    def classificar_atraso(row):
+        if row['Status Pagamento'] == 'Não Pago - Em Atraso':
+            dias = row['Dias Atraso']
+            if dias == 0:
+                return 'Não vencidos'
+            elif 1 <= dias <= 3:
+                return 'Atraso 1-3 dias'
+            elif 4 <= dias <= 10:
+                return 'Atraso 4-10 dias'
+            elif 11 <= dias <= 20:
+                return 'Atraso 11-20 dias'
+            elif 21 <= dias <= 30:
+                return 'Atraso 21-30 dias'
+            else:
+                return 'Atraso >30 dias'
+        else:
+            return 'Não vencidos'
+
+    # Aplicar classificação
+    data['Categoria Atraso'] = data.apply(classificar_atraso, axis=1)
 
 
+    # Agregar dados por cliente
+    clientes_agg = data.groupby(['Cliente', 'CFP/CNPJ', 'Categoria Cliente']).agg(
+        Total_Boletos=('NUMDOC', 'count'),
+        Boletos_Vencidos=('Dias Atraso', lambda x: (x > 0).sum()),
+        Ultimo_Atraso=('Dias Atraso', 'max')
+    ).reset_index()
+
+    # Classificação final baseada no pior caso
+    def categorizar_cliente_final(row):
+        if row['Ultimo_Atraso'] == 0:
+            return 'Não vencidos'
+        elif 1 <= row['Ultimo_Atraso'] <= 3:
+            return 'Atraso 1-3 dias'
+        elif 4 <= row['Ultimo_Atraso'] <= 10:
+            return 'Atraso 4-10 dias'
+        elif 11 <= row['Ultimo_Atraso'] <= 20:
+            return 'Atraso 11-20 dias'
+        elif 21 <= row['Ultimo_Atraso'] <= 30:
+            return 'Atraso 21-30 dias'
+        else:
+            return 'Atraso >30 dias'
+
+    clientes_agg['Classificação Final'] = clientes_agg.apply(categorizar_cliente_final, axis=1)
 
     # Sidebar para filtros
     st.sidebar.title("Filtros")
@@ -877,154 +939,146 @@ AND  dbCronos.dbo.fn_DscMeioPagCPR(c.IdCPR) IN (
         selected_df = pd.DataFrame(selected_rows)
         
         if not selected_df.empty:
-            st.write("### Tabela Auxiliar - Linhas Selecionadas")
-            st.dataframe(selected_df, hide_index=True)
-            
-            if 'VR Corrigido' in selected_df.columns:
-                def convert_value(x):
-                    if isinstance(x, str) and x.strip():
-                        return float(x.replace('R$ ', '').replace('.', '').replace(',', '.'))
-                    return 0.0
-                total_corrigido = selected_df['VR Corrigido'].apply(convert_value).sum()
-                st.metric(label="Total Selecionado💲🪙", value=format_currency(total_corrigido))
-            
-            st.write("### Download da Tabela Selecionada")
-            img_buffer = dataframe_to_png(selected_df)
-            if img_buffer:
-                st.download_button(
-                    label="Download Imagem 🖼️",
-                    data=img_buffer,
-                    file_name=f"{title}_selecionados.png",
-                    mime="image/png",
-                    key=f"{key}_download_image"  # Correção: usando f-string para chave única
-                )
-            else:
-                st.warning("Não foi possível gerar o arquivo PNG para download.")
+            with st.form(key=f"form_{key}"):
+                st.subheader("Editar Registros Selecionados")
                 
-            # Gerar arquivo Excel
-            excel_buffer = io.BytesIO()
-            selected_df.to_excel(excel_buffer, index=False, engine='openpyxl')
-            excel_buffer.seek(0)
-
-            # Carregar o workbook com openpyxl
-            wb = openpyxl.load_workbook(excel_buffer)
-            ws = wb.active
-
-            # Criar uma tabela estilizada
-            tab = Table(displayName="TabelaSelecionada", ref=f"A1:{openpyxl.utils.get_column_letter(ws.max_column)}{ws.max_row}")
-            style = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
-            tab.tableStyleInfo = style
-            ws.add_table(tab)
-
-            # Encontrar a coluna 'Status Pagamento'
-            status_col = None
-            for col in range(1, ws.max_column + 1):
-                if ws.cell(1, col).value == 'Status Pagamento':
-                    status_col = col
-                    break
-
-            # Aplicar formatação condicional se a coluna for encontrada
-            if status_col:
-                color_map = {
-                    'Pago no Prazo': '2ECC71',          # Verde
-                    'Pago em Atraso': '538405',         # Verde escuro
-                    'Não Pago - Em Atraso': 'E74C3C',   # Vermelho
-                    'Não Pago': 'F1A11F',              # Laranja
-                    'Não Pago - Vence Hoje': 'F8E620',  # Amarelo
-                    'Indefinido': 'D3D3D3'             # Cinza
-                }
-
-                for status, color in color_map.items():
-                    fill = PatternFill(start_color=color, end_color=color, fill_type='solid')
-                    font_color = 'FFFFFF' if status in ['Pago no Prazo', 'Pago em Atraso', 'Não Pago - Em Atraso'] else '000000'
-                    font = Font(color=font_color)
-                    rule = openpyxl.formatting.rule.CellIsRule(
-                        operator='equal',
-                        formula=[f'"{status}"'],
-                        fill=fill,
-                        font=font
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    nova_data = st.date_input("Data de Contato", key=f"data_{key}")
+                with col2:
+                    meio_contato = st.selectbox("Meio de Contato", ['E-mail', 'Telefone', 'WhatsApp', 'Visita'], key=f"meio_{key}")
+                with col3:
+                    operador = st.text_input("Operador", key=f"operador_{key}")
+                with col4:
+                    retorno = st.text_area("Retorno Cliente", key=f"retorno_{key}")
+                
+                if st.form_submit_button("💾 Salvar Alterações"):
+                    # Atualizar o dataframe principal
+                    indices = selected_df.index
+                    for idx in indices:
+                        data.loc[idx, 'Data de Contato'] = nova_data
+                        data.loc[idx, 'Meio de Contato'] = meio_contato
+                        data.loc[idx, 'Operador'] = operador
+                        data.loc[idx, 'Retorno Cliente'] = retorno
+                    
+                    # Salvar em CSV
+                    data[['NUMDOC'] + NEW_COLS].to_csv(DATA_PATH, index=False)
+                    st.success("Alterações salvas com sucesso!")
+                
+                st.write("### Tabela Auxiliar - Linhas Selecionadas")
+                st.dataframe(selected_df, hide_index=True)
+                
+                if 'VR Corrigido' in selected_df.columns:
+                    def convert_value(x):
+                        if isinstance(x, str) and x.strip():
+                            return float(x.replace('R$ ', '').replace('.', '').replace(',', '.'))
+                        return 0.0
+                    total_corrigido = selected_df['VR Corrigido'].apply(convert_value).sum()
+                    st.metric(label="Total Selecionado💲🪙", value=format_currency(total_corrigido))
+                
+                st.write("### Download da Tabela Selecionada")
+                img_buffer = dataframe_to_png(selected_df)
+                if img_buffer:
+                    st.download_button(
+                        label="Download Imagem 🖼️",
+                        data=img_buffer,
+                        file_name=f"{title}_selecionados.png",
+                        mime="image/png",
+                        key=f"{key}_download_image"  # Correção: usando f-string para chave única
                     )
-                    ws.conditional_formatting.add(f"A2:{openpyxl.utils.get_column_letter(ws.max_column)}{ws.max_row}", rule)
+                else:
+                    st.warning("Não foi possível gerar o arquivo PNG para download.")
+                    
+                # Gerar arquivo Excel
+                excel_buffer = io.BytesIO()
+                selected_df.to_excel(excel_buffer, index=False, engine='openpyxl')
+                excel_buffer.seek(0)
 
-            # Salvar o arquivo no buffer
-            excel_buffer = io.BytesIO()
-            wb.save(excel_buffer)
-            excel_buffer.seek(0)
+                # Carregar o workbook com openpyxl
+                wb = openpyxl.load_workbook(excel_buffer)
+                ws = wb.active
 
-            # Botão de download no Streamlit
-            st.download_button(
-                label="Download Excel 📊",
-                data=excel_buffer,
-                file_name="tabela_auxiliar.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key=f"{key}_download_excel"  # Correção: usando f-string para chave única
-            )
+                # Criar uma tabela estilizada
+                tab = Table(displayName="TabelaSelecionada", ref=f"A1:{openpyxl.utils.get_column_letter(ws.max_column)}{ws.max_row}")
+                style = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+                tab.tableStyleInfo = style
+                ws.add_table(tab)
+
+                # Encontrar a coluna 'Status Pagamento'
+                status_col = None
+                for col in range(1, ws.max_column + 1):
+                    if ws.cell(1, col).value == 'Status Pagamento':
+                        status_col = col
+                        break
+
+                # Aplicar formatação condicional se a coluna for encontrada
+                if status_col:
+                    color_map = {
+                        'Pago no Prazo': '2ECC71',          # Verde
+                        'Pago em Atraso': '538405',         # Verde escuro
+                        'Não Pago - Em Atraso': 'E74C3C',   # Vermelho
+                        'Não Pago': 'F1A11F',              # Laranja
+                        'Não Pago - Vence Hoje': 'F8E620',  # Amarelo
+                        'Indefinido': 'D3D3D3'             # Cinza
+                    }
+
+                    for status, color in color_map.items():
+                        fill = PatternFill(start_color=color, end_color=color, fill_type='solid')
+                        font_color = 'FFFFFF' if status in ['Pago no Prazo', 'Pago em Atraso', 'Não Pago - Em Atraso'] else '000000'
+                        font = Font(color=font_color)
+                        rule = openpyxl.formatting.rule.CellIsRule(
+                            operator='equal',
+                            formula=[f'"{status}"'],
+                            fill=fill,
+                            font=font
+                        )
+                        ws.conditional_formatting.add(f"A2:{openpyxl.utils.get_column_letter(ws.max_column)}{ws.max_row}", rule)
+
+                # Salvar o arquivo no buffer
+                excel_buffer = io.BytesIO()
+                wb.save(excel_buffer)
+                excel_buffer.seek(0)
+
+                # Botão de download no Streamlit
+                st.download_button(
+                    label="Download Excel 📊",
+                    data=excel_buffer,
+                    file_name="tabela_auxiliar.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key=f"{key}_download_excel"  # Correção: usando f-string para chave única
+                )
         else:
             st.info("Nenhuma linha selecionada. Selecione linhas na tabela acima para ver a tabela auxiliar e o botão de download.")
+   
     # Configuração de datas
-   # today = pd.to_datetime('today').normalize().date()
+    # today = pd.to_datetime('today').normalize().date()
     #start_of_week = (pd.to_datetime('today').normalize() - pd.offsets.Week(weekday=0)).date()
     #end_of_week = (start_of_week + pd.Timedelta(days=6)).date()
     #start_of_month = pd.to_datetime('today').normalize().replace(day=1).date()
     #end_of_month = (pd.to_datetime('today').normalize() + pd.offsets.MonthEnd(0)).date()
 
 
-    
-
-    # Lista de portadores para a aba "Créditos e Devoluções"
-    portadores_creditos_devolucoes = [
-        'NOTA DE CREDITO', 'DEVOLUÇÃO DE VENDA', 'VALOR PAGO A MAIS', 'CREDITO POR TROCA',
-        'CASHBACK', 'COMISSÃO PJ', 'VOUCHER SKY SETEMBRO', 'VOUCHER SKY OUTUBRO',
-        'VOUCHER SKY NOVEMBRO', 'VOUCHER SKY MARÇO', 'VOUCHER SKY MAIO', 'VOUCHER SKY JUNHO',
-        'VOUCHER SKY JULHO', 'VOUCHER SKY JANEIRO', 'VOUCHER SKY FEVEREIR', 'VOUCHER SKY DEZEMBRO',
-        'VOUCHER SKY AGOSTO', 'VOUCHER SKY ABRIL'
+        # Modificação das abas para classificação por dias de atraso
+    st.subheader("Classificação de Clientes por Dias de Atraso")
+    show_legend = st.checkbox("Exibir Legenda", value=True)
+    categorias_atraso = [
+        'Não vencidos',
+        'Atraso 1-3 dias', 
+        'Atraso 4-10 dias',
+        'Atraso 11-20 dias',
+        'Atraso 21-30 dias',
+        'Atraso >30 dias'
     ]
 
-    # Abas para tabelas com carregamento sob demanda
-    st.subheader("Tabelas de Contas")
-    show_legend = st.checkbox("Exibir Legenda", value=True)
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        f"Contas em Atraso até {today.strftime('%d/%m/%Y')}",
-        f"Contas a Receber Hoje {today.strftime('%d/%m/%Y')}",
-        f"Contas da Semana {start_of_week.strftime('%d/%m/%Y')} - {end_of_week.strftime('%d/%m/%Y')}",
-        f"Contas do Mês {start_of_month.strftime('%m/%Y')}",
-        "Créditos e Devoluções"
-    ])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(categorias_atraso)
 
-    with tab1:
-        overdue_data = filtered_data[
-            (filtered_data['Status Pagamento'] == 'Não Pago - Em Atraso') &
-            (~filtered_data['Portador'].isin(portadores_creditos_devolucoes))
-        ]
-        display_aggrid_table(f"Contas em Atraso até {today.strftime('%d/%m/%Y')}", overdue_data, key="aggrid_overdue")
-
-    with tab2:
-        today_data = filtered_data[
-            (pd.to_datetime(filtered_data['Dt Vencimento']).dt.normalize() == pd.to_datetime(today).normalize()) &
-            (~filtered_data['Portador'].isin(portadores_creditos_devolucoes))
-        ]
-        display_aggrid_table(f"Contas a Receber Hoje {today.strftime('%d/%m/%Y')}", today_data, key="aggrid_today")
-
-    with tab3:
-        week_data = filtered_data[
-            (pd.to_datetime(filtered_data['Dt Vencimento']).dt.date >= start_of_week) &
-            (pd.to_datetime(filtered_data['Dt Vencimento']).dt.date <= end_of_week) &
-            (~filtered_data['Portador'].isin(portadores_creditos_devolucoes))
-        ]
-        display_aggrid_table(f"Contas da Semana {start_of_week.strftime('%d/%m/%Y')} - {end_of_week.strftime('%d/%m/%Y')}", week_data, key="aggrid_week")
-
-    with tab4:
-        month_data = filtered_data[
-            (pd.to_datetime(filtered_data['Dt Vencimento']).dt.date >= start_of_month) &
-            (pd.to_datetime(filtered_data['Dt Vencimento']).dt.date <= end_of_month) &
-            (~filtered_data['Portador'].isin(portadores_creditos_devolucoes))
-        ]
-        display_aggrid_table(f"Contas do Mês {start_of_month.strftime('%m/%Y')}", month_data, key="aggrid_month")
-
-    with tab5:
-        creditos_devolucoes_data = filtered_data[
-            filtered_data['Portador'].isin(portadores_creditos_devolucoes)
-        ]
-        display_aggrid_table("Créditos e Devoluções", creditos_devolucoes_data, key="aggrid_creditos_devolucoes")
+    for tab, categoria in zip([tab1, tab2, tab3, tab4, tab5, tab6], categorias_atraso):
+        with tab:
+            filtered = clientes_agg[clientes_agg['Classificação Final'] == categoria]
+            display_aggrid_table(
+                title=f"Clientes - {categoria}",
+                df=filtered.sort_values('Ultimo_Atraso', ascending=False),
+                key=f"aggrid_{categoria}"
+            )
 
     st.write("Dados atualizados automaticamente a cada 30 minutos.")
