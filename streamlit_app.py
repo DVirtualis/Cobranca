@@ -108,7 +108,61 @@ user_email = (
     else st.session_state.get("user_email", "")
 )
 
-if not (user_email in EMAILS_AUTORIZADOS or user_email.endswith(f"@{DOMINIO_CORPORATIVO}")):
+
+if not (st.experimental_user.is_logged_in or st.session_state.get("traditional_logged_in", False)):
+    st.title("🔒 Acesso Restrito - Virtualis")
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        try:
+            st.image("https://cdn-icons-png.flaticon.com/512/2965/2965278.png", width=200)
+            
+            # Login com Google
+            if st.button("🔐 Entrar com Google", use_container_width=True):
+                st.login()
+            
+            # Divisor visual
+            st.markdown("---")
+            
+            # Login Tradicional
+            with st.form("Login Tradicional"):
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
+                if st.form_submit_button("🔑 Entrar com E-mail e Senha"):
+                    EMAILS_AUTORIZADOS = st.secrets.authorized_users.emails
+                    
+                    # Verifica credenciais e autorização
+                    if email in EMAILS_AUTORIZADOS and senha == st.secrets.traditional_passwords.get(email, ""):
+                        st.session_state.traditional_logged_in = True
+                        st.session_state.user_email = email
+                        st.rerun()
+                    else:
+                        st.error("Credenciais inválidas ou acesso não autorizado")
+            
+            # Seletor de Tema
+            st.button(
+                theme_config["button_face"],
+                on_click=change_theme,
+                use_container_width=True
+            )
+            
+            st.markdown("---")
+            st.caption("Você precisa estar autenticado para acessar esta aplicação")
+        except Exception as e:   
+            st.error(f"Erro na autenticação: {str(e)}") 
+    st.stop()
+
+# Verificação de autorização combinada
+DOMINIO_CORPORATIVO = "virtualis.tv.br"
+EMAILS_AUTORIZADOS = st.secrets.authorized_users.emails
+
+# Obtém o email conforme o método de login
+user_email = (
+    st.experimental_user.get("email", "") 
+    if st.experimental_user.is_logged_in 
+    else st.session_state.get("user_email", "")
+)
+
+if user_email not in EMAILS_AUTORIZADOS:
     st.error(f"""
         ⚠️ Acesso Restrito!
         O email **{user_email}** não tem permissão para usar este sistema.
@@ -123,6 +177,7 @@ if not (user_email in EMAILS_AUTORIZADOS or user_email.endswith(f"@{DOMINIO_CORP
         del st.session_state.user_email
         
     st.stop()
+    
     
     
 from parcelamento import page_parcelamento_cartao
